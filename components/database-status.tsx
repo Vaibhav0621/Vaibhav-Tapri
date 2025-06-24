@@ -1,3 +1,5 @@
+// components/database-status.tsx
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -6,14 +8,54 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle, XCircle, AlertCircle, Database, Loader2, RefreshCw } from "lucide-react"
-import { isSupabaseConfigured, checkDatabaseConnection, supabase } from "@/lib/supabase"
+
+// CORRECT: Import the client-side configured check
+import { isSupabaseConfigured } from "@/lib/supabase"
+
+// NOTE: We cannot check DB connection or run admin queries directly from a client component anymore.
+// This is a GOOD thing for security. We will check this via a Server Action.
+
+async function checkServerStatus() {
+    'use server' // This is a Server Action!
+    try {
+        const { createServerClient } = await import('@/lib/supabase/server')
+        const { supabaseAdmin, isAdminAvailable } = await import('@/lib/supabase/admin')
+        
+        const supabase = createServerClient()
+        const { error: connectionError } = await supabase.from("profiles").select("id").limit(1)
+
+        if(connectionError) throw new Error("Database connection failed.");
+        
+        const { count: taprisCount } = await supabase.from("tapris").select('id', { count: 'exact', head: true });
+        
+        // Admin functions should check if the admin client is available.
+        let profilesCount = 0;
+        if(isAdminAvailable()) {
+            const { count } = await supabaseAdmin.from("profiles").select('id', { count: 'exact', head: true });
+            profilesCount = count ?? 0;
+        }
+
+        return {
+            connected: true,
+            tabrisCount: taprisCount || 0,
+            profilesCount,
+            adminAvailable: isAdminAvailable()
+        }
+    } catch (e: any) {
+        return {
+            connected: false,
+            error: e.message
+        }
+    }
+}
+
 
 interface DatabaseStatus {
   configured: boolean
   connected: boolean
   tabrisCount: number
   profilesCount: number
-  applicationsCount: number
+  adminAvailable: boolean
   error?: string
 }
 
@@ -23,167 +65,63 @@ export function DatabaseStatus() {
 
   const checkStatus = async () => {
     setLoading(true)
-    try {
-      const configured = isSupabaseConfigured()
-
-      if (!configured) {
+    const configured = isSupabaseConfigured()
+    if (!configured) {
         setStatus({
-          configured: false,
-          connected: false,
-          tabrisCount: 0,
-          profilesCount: 0,
-          applicationsCount: 0,
-          error: "Supabase environment variables not configured",
-        })
-        return
-      }
-
-      const connected = await checkDatabaseConnection()
-
-      if (!connected) {
-        setStatus({
-          configured: true,
-          connected: false,
-          tabrisCount: 0,
-          profilesCount: 0,
-          applicationsCount: 0,
-          error: "Cannot connect to database",
-        })
-        return
-      }
-
-      // Get table counts
-      const [taprisResult, profilesResult, applicationsResult] = await Promise.all([
-        supabase.from("tapris").select("id", { count: "exact", head: true }),
-        supabase.from("profiles").select("id", { count: "exact", head: true }),
-        supabase.from("applications").select("id", { count: "exact", head: true }),
-      ])
-
-      setStatus({
-        configured: true,
-        connected: true,
-        tabrisCount: taprisResult.count || 0,
-        profilesCount: profilesResult.count || 0,
-        applicationsCount: applicationsResult.count || 0,
-      })
-    } catch (error: any) {
-      setStatus({
-        configured: isSupabaseConfigured(),
-        connected: false,
-        tabrisCount: 0,
-        profilesCount: 0,
-        applicationsCount: 0,
-        error: error.message,
-      })
-    } finally {
-      setLoading(false)
+            configured: false, connected: false, tabrisCount: 0, profilesCount: 0, adminAvailable: false, error: "Supabase environment variables not configured"
+        });
+        setLoading(false);
+        return;
     }
+    
+    // Call our new Server Action to check server-side status
+    const serverStatus = await checkServerStatus();
+    setStatus({
+        configured: true,
+        connected: serverStatus.connected,
+        tabrisCount: serverStatus.tabrisCount || 0,
+        profilesCount: serverStatus.profilesCount || 0,
+        adminAvailable: serverStatus.adminAvailable || false,
+        error: serverStatus.error
+    });
+    setLoading(false);
   }
 
   useEffect(() => {
     checkStatus()
   }, [])
-
+  
   if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Database Status
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Checking database connection...</span>
-          </div>
-        </CardContent>
-      </Card>
-    )
+    return <Card><CardHeader><CardTitle>Database Status</CardTitle></CardHeader><CardContent><Loader2 className="animate-spin" /> Checking...</CardContent></Card>
   }
-
-  if (!status) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>Failed to check database status</AlertDescription>
-      </Alert>
-    )
-  }
+  if (!status) return <Alert variant="destructive">Could not load status.</Alert>
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Database className="h-5 w-5" />
-          Database Status
-        </CardTitle>
-        <CardDescription>Current database connectivity and data overview</CardDescription>
+        <CardTitle className="flex items-center gap-2"><Database /> Database Status</CardTitle>
+        <CardDescription>Connectivity and data overview.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Configuration Status */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Configuration</span>
-          <Badge className={status.configured ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-            {status.configured ? <CheckCircle className="h-3 w-3 mr-1" /> : <XCircle className="h-3 w-3 mr-1" />}
-            {status.configured ? "Configured" : "Not Configured"}
-          </Badge>
-        </div>
-
+        <div className="flex items-center justify-between"><span className="font-medium">Client Config</span><Badge variant={status.configured ? "default" : "destructive"}>{status.configured ? "Configured" : "Missing"}</Badge></div>
         {/* Connection Status */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Connection</span>
-          <Badge className={status.connected ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-            {status.connected ? <CheckCircle className="h-3 w-3 mr-1" /> : <XCircle className="h-3 w-3 mr-1" />}
-            {status.connected ? "Connected" : "Disconnected"}
-          </Badge>
-        </div>
+        <div className="flex items-center justify-between"><span className="font-medium">DB Connection</span><Badge variant={status.connected ? "default" : "destructive"}>{status.connected ? "Connected" : "Failed"}</Badge></div>
+        {/* Admin Key */}
+        <div className="flex items-center justify-between"><span className="font-medium">Admin Key</span><Badge variant={status.adminAvailable ? "default" : "secondary"}>{status.adminAvailable ? "Available" : "Not Set"}</Badge></div>
 
-        {/* Data Counts */}
         {status.connected && (
-          <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{status.tabrisCount}</div>
-              <div className="text-xs text-gray-600">Tapris</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{status.profilesCount}</div>
-              <div className="text-xs text-gray-600">Profiles</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{status.applicationsCount}</div>
-              <div className="text-xs text-gray-600">Applications</div>
-            </div>
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+            <div className="text-center"><div className="text-2xl font-bold text-blue-500">{status.tabrisCount}</div><div className="text-xs text-muted-foreground">Tapris</div></div>
+            <div className="text-center"><div className="text-2xl font-bold text-green-500">{status.profilesCount}</div><div className="text-xs text-muted-foreground">Profiles (Admin)</div></div>
           </div>
         )}
 
-        {/* Error Message */}
-        {status.error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{status.error}</AlertDescription>
-          </Alert>
-        )}
+        {status.error && <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertDescription>{status.error}</AlertDescription></Alert>}
 
-        {/* Refresh Button */}
         <Button variant="outline" size="sm" onClick={checkStatus} disabled={loading} className="w-full">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh Status
+          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh Status
         </Button>
-
-        {/* Setup Instructions */}
-        {!status.configured && (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              To enable full functionality, please configure your Supabase environment variables:
-              <br />• NEXT_PUBLIC_SUPABASE_URL
-              <br />• NEXT_PUBLIC_SUPABASE_ANON_KEY
-              <br />• SUPABASE_SERVICE_ROLE_KEY (for admin features)
-            </AlertDescription>
-          </Alert>
-        )}
       </CardContent>
     </Card>
   )
