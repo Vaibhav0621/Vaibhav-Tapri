@@ -1,35 +1,44 @@
 import { createClient } from '@/lib/supabase/server'
 
 export const TapriService = {
+  async getApprovedTapris(page: number, limit: number, category?: string, stage?: string) {
+    const supabase = createClient()
+    let query = supabase
+      .from('tapris')
+      .select('id, title, tagline, description, category, stage, location, team_size, open_positions, banner_url, status, views, applications, created_at, website, profiles(full_name, avatar_url)')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+
+    if (category && category !== 'all') {
+      query = query.eq('category', category)
+    }
+    if (stage && stage !== 'all') {
+      query = query.eq('stage', stage)
+    }
+
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+    query = query.range(from, to)
+
+    const { data, error } = await query
+    if (error) throw new Error(error.message)
+    return { data }
+  },
+
   async getTapriBySlug(slug: string) {
     const supabase = createClient()
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug)
-    
-    const query = supabase
+    let query = supabase
       .from('tapris')
-      .select('id, title, tagline, description, category, stage, location, team_size, open_positions, website, banner_url, logo_url, mission, vision, status, required_skills, commitment_level, views, applications')
-      .single()
+      .select('id, title, tagline, description, category, stage, location, team_size, open_positions, banner_url, status, views, applications, created_at, website, mission, vision, required_skills, commitment_level, profiles(full_name, avatar_url)')
 
-    let data, error
-    if (isUUID) {
-      ({ data, error } = await query.eq('id', slug))
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug)) {
+      query = query.eq('id', slug)
     } else {
-      // Convert slug to title (e.g., "my-awesome-project" -> "My Awesome Project")
-      const title = slug
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ')
-      ({ data, error } = await query.ilike('title', title))
+      query = query.ilike('title', `%${slug.replace(/-/g, ' ')}%`)
     }
 
-    if (error) {
-      console.error('Supabase error in getTapriBySlug:', error.message)
-      throw error
-    }
-    if (!data) {
-      console.error('No data found for slug:', slug)
-      throw new Error('Tapri not found')
-    }
+    const { data, error } = await query.single()
+    if (error) throw new Error(error.message)
     return { data }
   },
 }
