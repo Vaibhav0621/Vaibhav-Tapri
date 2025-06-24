@@ -1,32 +1,24 @@
 // lib/services/analytics-service.ts
 
 // CORRECT IMPORTS
-import { createClient as createServerClient } from "@/lib/supabase/server"
-import { supabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/admin" // <-- CORRECTED PATH
+import { createClient } from "@/lib/supabase/server"; // For standard server operations
+import { supabaseAdmin, isAdminConfigured } from "@/lib/supabase/admin"; // For privileged admin operations
 
 export class AnalyticsService {
-  // getDashboardAnalytics and other methods remain the same...
   static async getDashboardAnalytics() {
-    if (!isSupabaseConfigured()) {
-        // Return mock data if not configured
-        return {
-            totalTapris: 10, pendingTapris: 2, approvedTapris: 8,
-            totalUsers: 150, totalApplications: 90, totalViews: 5000,
-            userGrowthRate: "10%",
-            recentActivity: { newUsersThisMonth: 20, newApplicationsThisMonth: 15 }
-        };
+    if (!isAdminConfigured()) { // Using the correct config check from the admin file
+      console.warn("Admin key not set. Returning mock analytics data.");
+      return { totalTapris: 0, totalUsers: 0 /* etc. */ };
     }
     
-    // Logic here is now safe because it uses the correct admin client.
-    const { count: totalTapris } = await createServerClient().from('tapris').select('*', { count: 'exact' });
-    const { count: totalUsers } = await supabaseAdmin.from('profiles').select('*', { count: 'exact' });
+    // Now you can safely use both clients as needed
+    const supabase = createClient(); // Standard server client
+    const { count: totalTapris } = await supabase.from('tapris').select('*', { count: 'exact', head: true });
     
-    // ... rest of your analytics logic
-    
-    return {
-        totalTapris: totalTapris || 0,
-        totalUsers: totalUsers || 0,
-        // ... etc
-    }
+    // Use admin client for things that bypass RLS
+    const { count: totalUsers } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true });
+
+    return { totalTapris: totalTapris || 0, totalUsers: totalUsers || 0 };
   }
+  // ... other analytics methods
 }
