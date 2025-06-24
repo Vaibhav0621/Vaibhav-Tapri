@@ -35,6 +35,14 @@ type Tapri = {
   }
 }
 
+// Helper to generate slug from title
+const generateSlug = (title: string) => {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
 export default function TaprisPage() {
   const isConfigured = isSupabaseConfigured()
   const [tapris, setTapris] = useState<Tapri[]>([])
@@ -71,11 +79,9 @@ export default function TaprisPage() {
     fetchTapris()
   }, [selectedCategory, selectedStage, isConfigured])
 
-  // Filter tapris based on search term and location
   const filteredTapris = useMemo(() => {
     let filtered = tapris
 
-    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(
         (tapri) =>
@@ -85,7 +91,6 @@ export default function TaprisPage() {
       )
     }
 
-    // Location filter
     if (selectedLocation !== "all") {
       filtered = filtered.filter((tapri) => tapri.location.toLowerCase().includes(selectedLocation.toLowerCase()))
     }
@@ -107,18 +112,16 @@ export default function TaprisPage() {
   }
 
   const getStageIcon = (stage: string) => {
-    if (stage.includes("MVP") || stage.includes("Prototype")) return <Clock className="h-4 w-4" />
-    if (stage.includes("Growth") || stage.includes("Series")) return <TrendingUp className="h-4 w-4" />
-    if (stage.includes("Launch") || stage.includes("Commercial")) return <Award className="h-4 w-4" />
+    if (stage.includes("mvp-development") || stage.includes("prototype")) return <Clock className="h-4 w-4" />
+    if (stage.includes("scaling") || stage.includes("series")) return <TrendingUp className="h-4 w-4" />
+    if (stage.includes("launch-ready") || stage.includes("commercial")) return <Award className="h-4 w-4" />
     return <Clock className="h-4 w-4" />
   }
 
-  // Generate join URL - either external website or internal form
   const getJoinUrl = (tapri: Tapri) => {
     if (tapri.website) {
       return tapri.website
     }
-    // Use Web3Forms with Tapri details
     return `https://web3forms.com/forms/f3993f73-3c04-4f7b-ad60-630c82bb01cc?tapri_id=${tapri.id}&tapri_title=${encodeURIComponent(tapri.title)}&tapri_category=${encodeURIComponent(tapri.category)}`
   }
 
@@ -140,14 +143,10 @@ export default function TaprisPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <SetupBanner />
-
-        {/* Hero Section Skeleton */}
         <div className="mb-12 text-center">
           <div className="h-12 bg-gray-200 rounded-lg mb-4 max-w-md mx-auto animate-pulse"></div>
           <div className="h-6 bg-gray-200 rounded-lg mb-8 max-w-2xl mx-auto animate-pulse"></div>
         </div>
-
-        {/* Quick Grid Skeleton */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="border rounded-lg overflow-hidden animate-pulse">
@@ -182,8 +181,6 @@ export default function TaprisPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <SetupBanner />
-
-      {/* Hero Section */}
       <div className="mb-12 text-center">
         <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-600 via-red-500 to-orange-500 bg-clip-text text-transparent">
           Discover Amazing Tapris
@@ -192,10 +189,7 @@ export default function TaprisPage() {
           Explore innovative projects and find your next collaboration opportunity. Join passionate creators building
           the future.
         </p>
-
-        {/* Search and Filters */}
         <div className="flex flex-col gap-4 mb-8 max-w-6xl mx-auto">
-          {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -205,14 +199,11 @@ export default function TaprisPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-
-          {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-gray-500" />
               <span className="text-sm font-medium text-gray-700">Filters:</span>
             </div>
-
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-full md:w-48 h-10">
                 <SelectValue placeholder="All Categories" />
@@ -232,7 +223,6 @@ export default function TaprisPage() {
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
-
             <Select value={selectedStage} onValueChange={setSelectedStage}>
               <SelectTrigger className="w-full md:w-48 h-10">
                 <SelectValue placeholder="All Stages" />
@@ -242,13 +232,12 @@ export default function TaprisPage() {
                 <SelectItem value="idea">Idea Stage</SelectItem>
                 <SelectItem value="planning">Planning</SelectItem>
                 <SelectItem value="prototype">Prototype</SelectItem>
-                <SelectItem value="MVP Development">MVP Development</SelectItem>
-                <SelectItem value="Beta Testing">Beta Testing</SelectItem>
-                <SelectItem value="Launch Ready">Launch Ready</SelectItem>
+                <SelectItem value="mvp-development">MVP Development</SelectItem>
+                <SelectItem value="beta-testing">Beta Testing</SelectItem>
+                <SelectItem value="launch-ready">Launch Ready</SelectItem>
                 <SelectItem value="scaling">Scaling</SelectItem>
               </SelectContent>
             </Select>
-
             <Select value={selectedLocation} onValueChange={setSelectedLocation}>
               <SelectTrigger className="w-full md:w-48 h-10">
                 <SelectValue placeholder="All Locations" />
@@ -264,7 +253,6 @@ export default function TaprisPage() {
                 <SelectItem value="toronto">Toronto</SelectItem>
               </SelectContent>
             </Select>
-
             <Button
               variant="outline"
               onClick={() => {
@@ -280,8 +268,6 @@ export default function TaprisPage() {
           </div>
         </div>
       </div>
-
-      {/* Stats Section */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
         <div className="text-center p-6 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border border-yellow-200">
           <div className="text-3xl font-bold text-yellow-600">{filteredTapris.length}</div>
@@ -306,133 +292,117 @@ export default function TaprisPage() {
           <div className="text-sm text-gray-600">Applications</div>
         </div>
       </div>
-
-      {/* Results Count */}
       <div className="mb-6">
         <p className="text-gray-600">
           Showing {filteredTapris.length} of {tapris.length} Tapris
           {searchTerm && ` for "${searchTerm}"`}
         </p>
       </div>
-
-      {/* Projects Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredTapris.map((tapri) => (
-          <Card
-            key={tapri.id}
-            className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-yellow-300 bg-card shadow-md"
-          >
-            <Link href={`/tapris/${tapri.id}`} className="block">
-              <div className="aspect-video relative overflow-hidden">
-                <Image
-                  src={tapri.banner_url || "/placeholder.svg?height=200&width=400"}
-                  alt={tapri.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                {/* Status Badge */}
-                <div className="absolute top-3 right-3">
-                  <Badge className={getStatusColor(tapri.status)}>
-                    {tapri.status === "approved" ? "Active" : tapri.status}
-                  </Badge>
-                </div>
-
-                {/* Category Badge */}
-                <div className="absolute top-3 left-3">
-                  <Badge variant="outline" className="bg-white/90 text-gray-800 border-white">
-                    {tapri.category}
-                  </Badge>
-                </div>
-
-                {/* Stage Badge */}
-                <div className="absolute bottom-3 left-3 flex items-center gap-1">
-                  <Badge className="bg-black/70 text-white border-none flex items-center gap-1">
-                    {getStageIcon(tapri.stage)}
-                    {tapri.stage}
-                  </Badge>
-                </div>
-              </div>
-            </Link>
-
-            <CardHeader className="pb-3">
-              <Link href={`/tapris/${tapri.id}`} className="block">
-                <div className="flex justify-between items-start mb-2">
-                  <CardTitle className="text-xl group-hover:text-yellow-600 transition-colors line-clamp-1 text-card-foreground">
-                    {tapri.title}
-                  </CardTitle>
-                </div>
-                <CardDescription className="text-base font-medium text-muted-foreground line-clamp-1">
-                  {tapri.tagline || "No tagline provided"}
-                </CardDescription>
-              </Link>
-            </CardHeader>
-
-            <CardContent className="pt-0">
-              <Link href={`/tapris/${tapri.id}`} className="block mb-4">
-                <p className="text-sm text-muted-foreground line-clamp-3">{tapri.description}</p>
-              </Link>
-
-              {/* Key Metrics */}
-              <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                <div className="flex items-center gap-2 text-gray-500">
-                  <MapPin className="h-4 w-4" />
-                  <span className="truncate">{tapri.location}</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-500">
-                  <Users className="h-4 w-4" />
-                  <span>{tapri.team_size} members</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-500">
-                  <Eye className="h-4 w-4" />
-                  <span>{tapri.views.toLocaleString()} views</span>
-                </div>
-                <div className="flex items-center gap-2 text-green-600 font-medium">
-                  <Award className="h-4 w-4" />
-                  <span>{tapri.open_positions} positions</span>
-                </div>
-              </div>
-
-              {/* Creator Info */}
-              {tapri.profiles && (
-                <div className="mb-4 p-3 bg-muted rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Image
-                      src={tapri.profiles.avatar_url || "/placeholder.svg?height=32&width=32"}
-                      alt="Creator"
-                      width={32}
-                      height={32}
-                      className="rounded-full"
-                    />
-                    <div className="text-sm">
-                      <div className="font-medium text-foreground">{tapri.profiles.full_name || "Anonymous"}</div>
-                      <div className="text-muted-foreground">Project Creator</div>
-                    </div>
+        {filteredTapris.map((tapri) => {
+          const slug = tapri.title ? generateSlug(tapri.title) : tapri.id
+          return (
+            <Card
+              key={tapri.id}
+              className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-yellow-300 bg-card shadow-md"
+            >
+              <Link href={`/tapris/${slug}`} className="block">
+                <div className="aspect-video relative overflow-hidden">
+                  <Image
+                    src={tapri.banner_url || "/placeholder.svg?height=200&width=400"}
+                    alt={tapri.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute top-3 right-3">
+                    <Badge className={getStatusColor(tapri.status)}>
+                      {tapri.status === "approved" ? "Active" : tapri.status}
+                    </Badge>
+                  </div>
+                  <div className="absolute top-3 left-3">
+                    <Badge variant="outline" className="bg-white/90 text-gray-800 border-white">
+                      {tapri.category}
+                    </Badge>
+                  </div>
+                  <div className="absolute bottom-3 left-3 flex items-center gap-1">
+                    <Badge className="bg-black/70 text-white border-none flex items-center gap-1">
+                      {getStageIcon(tapri.stage)}
+                      {tapri.stage}
+                    </Badge>
                   </div>
                 </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-2">
-                <Button asChild className="flex-1" variant="outline">
-                  <Link href={`/tapris/${tapri.id}`}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    View Details
-                  </Link>
-                </Button>
-                <Button asChild className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white">
-                  <Link href={getJoinUrl(tapri)} target={tapri.website ? "_blank" : "_self"}>
-                    <Users className="mr-2 h-4 w-4" />
-                    Join Project
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </Link>
+              <CardHeader className="pb-3">
+                <Link href={`/tapris/${slug}`} className="block">
+                  <div className="flex justify-between items-start mb-2">
+                    <CardTitle className="text-xl group-hover:text-yellow-600 transition-colors line-clamp-1 text-card-foreground">
+                      {tapri.title}
+                    </CardTitle>
+                  </div>
+                  <CardDescription className="text-base font-medium text-muted-foreground line-clamp-1">
+                    {tapri.tagline || "No tagline provided"}
+                  </CardDescription>
+                </Link>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Link href={`/tapris/${slug}`} className="block mb-4">
+                  <p className="text-sm text-muted-foreground line-clamp-3">{tapri.description}</p>
+                </Link>
+                <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <MapPin className="h-4 w-4" />
+                    <span className="truncate">{tapri.location}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Users className="h-4 w-4" />
+                    <span>{tapri.team_size} members</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Eye className="h-4 w-4" />
+                    <span>{tapri.views.toLocaleString()} views</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-green-600 font-medium">
+                    <Award className="h-4 w-4" />
+                    <span>{tapri.open_positions} positions</span>
+                  </div>
+                </div>
+                {tapri.profiles && (
+                  <div className="mb-4 p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Image
+                        src={tapri.profiles.avatar_url || "/placeholder.svg?height=32&width=32"}
+                        alt="Creator"
+                        width={32}
+                        height={32}
+                        className="rounded-full"
+                      />
+                      <div className="text-sm">
+                        <div className="font-medium text-foreground">{tapri.profiles.full_name || "Anonymous"}</div>
+                        <div className="text-muted-foreground">Project Creator</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Button asChild className="flex-1" variant="outline">
+                    <Link href={`/tapris/${slug}`}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      View Details
+                    </Link>
+                  </Button>
+                  <Button asChild className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white">
+                    <Link href={getJoinUrl(tapri)} target={tapri.website ? "_blank" : "_self"}>
+                      <Users className="mr-2 h-4 w-4" />
+                      Join Project
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
-
       {filteredTapris.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-600 text-lg">No Tapris found matching your criteria.</p>
@@ -441,8 +411,6 @@ export default function TaprisPage() {
           </Button>
         </div>
       )}
-
-      {/* Call to Action */}
       <div className="mt-16 text-center p-12 bg-gradient-to-r from-yellow-600 via-red-500 to-orange-500 rounded-3xl text-white">
         <h2 className="text-3xl font-bold mb-4">Don't See Your Perfect Project?</h2>
         <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
