@@ -12,7 +12,7 @@ import { SetupBanner } from "@/components/setup-banner"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { TapriService } from "@/lib/services/tapri-service"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import  staticProjects  from "./[id]/page"
+import  staticProjects  from "./[slug]/page"
 
 type Tapri = {
   id: string
