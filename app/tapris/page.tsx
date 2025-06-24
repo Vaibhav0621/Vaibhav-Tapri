@@ -35,33 +35,6 @@ type Tapri = {
   }
 }
 
-// Helper to map static TapriData to Tapri type used here
-function mapStaticToTapri(staticTapri: any, id: any) {
-  return {
-    id: id,
-    title: staticTapri.title,
-    tagline: staticTapri.tagline,
-    description: staticTapri.description,
-    category: staticTapri.category,
-    stage: staticTapri.stage,
-    location: staticTapri.location,
-    team_size: staticTapri.teamSize,
-    open_positions: staticTapri.openPositions,
-    banner_url: staticTapri.bannerImage,
-    status: staticTapri.status === "recruiting" ? "approved" : staticTapri.status,
-    views: staticTapri.views,
-    applications: staticTapri.applications,
-    created_at: staticTapri.createdAt,
-    website: staticTapri.website,
-    profiles: staticTapri.teamLeader
-      ? {
-          full_name: staticTapri.teamLeader.name,
-          avatar_url: staticTapri.teamLeader.image,
-        }
-      : undefined,
-  }
-}
-
 export default function TaprisPage() {
   const isConfigured = isSupabaseConfigured()
   const [tapris, setTapris] = useState<Tapri[]>([])
@@ -85,13 +58,7 @@ export default function TaprisPage() {
 
       try {
         const { data } = await TapriService.getApprovedTapris(1, 12, selectedCategory, selectedStage)
-        // Map static tapris to Tapri type
-        const staticTapris = Object.entries(staticProjects).map(([id, tapri]) => mapStaticToTapri(tapri, id))
-        // Remove any db tapri with same id as static
-        const filteredDbTapris = (data || []).filter(
-          (t) => !staticTapris.some((s) => s.id && t.id && s.id.toLowerCase() === t.id.toLowerCase())
-        )
-        setTapris([...staticTapris, ...filteredDbTapris])
+        setTapris(data || [])
       } catch (error: any) {
         console.error("Error fetching tapris:", error)
         setError(error.message || "Failed to load tapris")
