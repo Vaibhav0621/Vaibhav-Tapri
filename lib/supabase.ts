@@ -1,35 +1,58 @@
-// lib/supabase.ts
-// FOR BROWSER / "use client" COMPONENTS
+import { createClient } from "@supabase/supabase-js"
+import type { Database } from "./database.types"
 
-import { createBrowserClient } from '@supabase/ssr';
-import type { Database } from './database.types';
+// Environment variables with validation
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-// The main client-side instance
-export const supabase = createBrowserClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Missing Supabase environment variables")
+}
 
-// EXPORT 1: `isSupabaseConfigured` as requested by the error log
-export const isSupabaseConfigured = (): boolean => {
-  return (
-    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-};
+// For client-side operations
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  },
+})
 
-// EXPORT 2: Dummy `createSupabaseServerClient` to satisfy the import error.
-// This will allow the project to build. Any component using this will log a clear error.
+// For server components - simplified version
 export const createSupabaseServerClient = () => {
-  console.error(
-    "FATAL ERROR: `createSupabaseServerClient` was called from a CLIENT component. " +
-    "This function is a dummy and should not be used. " +
-    "Update the importing file to use the server-side client."
-  );
-  // Return a mock object that won't immediately crash the app
-  return {
-    from: () => ({
-      select: async () => ({ error: { message: "Dummy client called." }, data: null }),
-    }),
-  };
-};
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+}
+
+// For admin operations (server-side only)
+export const supabaseAdmin = supabaseServiceRoleKey
+  ? createClient<Database>(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+  : supabase
+
+// Helper to check if Supabase is properly configured
+export const isSupabaseConfigured = () => {
+  return !!(supabaseUrl && supabaseAnonKey && supabaseUrl.includes("supabase.co"))
+}
+
+// Helper to check database connectivity
+export const checkDatabaseConnection = async () => {
+  try {
+    const { error } = await supabase.from("profiles").select("id").limit(1)
+    return !error
+  } catch {
+    return false
+  }
+}
+
+// Helper function to check if admin client is available
+export const isAdminAvailable = () => !!supabaseServiceRoleKey
