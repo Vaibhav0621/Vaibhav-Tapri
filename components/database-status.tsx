@@ -1,4 +1,5 @@
 // components/database-status.tsx
+'use server'
 "use client";
 
 import { useState, useEffect } from "react";
