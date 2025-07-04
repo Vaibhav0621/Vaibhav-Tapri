@@ -3,36 +3,40 @@
 import { useState, useEffect } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { X, Database, AlertTriangle } from "lucide-react"
-import { isSupabaseConfigured } from "@/lib/supabase"
+import { X, AlertTriangle } from "lucide-react"
 
 export function SetupBanner() {
   const [isVisible, setIsVisible] = useState(false)
-  const [isConfigured, setIsConfigured] = useState(false)
+  const [isConfigured, setIsConfigured] = useState(true)
 
   useEffect(() => {
-    const configured = isSupabaseConfigured()
-    setIsConfigured(configured)
-    setIsVisible(!configured)
+    // Check if Supabase is configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseKey || supabaseUrl.includes("your-project") || supabaseKey.includes("your-anon-key")) {
+      setIsConfigured(false)
+      setIsVisible(true)
+    }
   }, [])
 
-  if (!isVisible) return null
+  if (!isVisible || isConfigured) {
+    return null
+  }
 
   return (
-    <Alert className="rounded-none border-x-0 border-t-0 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 border-yellow-200 dark:border-yellow-800">
-      <Database className="h-4 w-4 text-yellow-600" />
+    <Alert className="rounded-none border-x-0 border-t-0 bg-yellow-50 border-yellow-200">
+      <AlertTriangle className="h-4 w-4 text-yellow-600" />
       <AlertDescription className="flex items-center justify-between w-full">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          <span className="text-yellow-800 dark:text-yellow-200">
-            Database not configured. Connect Supabase to enable full functionality.
-          </span>
-        </div>
+        <span className="text-yellow-800">
+          <strong>Setup Required:</strong> Please configure your Supabase credentials in the environment variables to
+          enable full functionality.
+        </span>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsVisible(false)}
-          className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-100 dark:hover:bg-yellow-900/20"
+          className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-100"
         >
           <X className="h-4 w-4" />
         </Button>

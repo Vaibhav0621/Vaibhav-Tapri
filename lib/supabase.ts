@@ -1,30 +1,56 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "./database.types"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Your Supabase configuration
+const supabaseUrl = "https://rvflrwmfxgmxjnecsoba.supabase.co"
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2Zmxyd21meGdteGpuZWNzb2JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxOTEzMDQsImV4cCI6MjA2Mzc2NzMwNH0.EqTo6E-qtiG3iR5191JwIwubGrEyQhaClx6Rb7LPoS0"
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing Supabase environment variables")
+// Create the main Supabase client
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+})
+
+// Helper function to check if Supabase is properly configured
+export const isSupabaseConfigured = () => {
+  return !!(supabaseUrl && supabaseAnonKey && supabaseUrl.includes("supabase.co"))
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
-
-export function isSupabaseConfigured(): boolean {
-  return !!(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-    process.env.NEXT_PUBLIC_SUPABASE_URL !== "your-supabase-url" &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== "your-supabase-anon-key"
-  )
+// Server-side client for API routes
+export const createServerClient = () => {
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  })
 }
 
-// Client for client-side operations
-export const createClientComponentClient = () => {
-  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+// Admin client (if service role key is available)
+export const createAdminClient = () => {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceRoleKey) {
+    throw new Error("Service role key not configured")
+  }
+
+  return createClient<Database>(supabaseUrl, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  })
 }
 
-// Server client for server-side operations
-export const createServerComponentClient = () => {
-  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+// Helper to check database connectivity
+export const checkDatabaseConnection = async () => {
+  try {
+    const { error } = await supabase.from("profiles").select("id").limit(1)
+    return !error
+  } catch {
+    return false
+  }
 }

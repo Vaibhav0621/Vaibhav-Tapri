@@ -1,16 +1,41 @@
-"use client"
-
 import Link from "next/link"
-import { Coffee } from "lucide-react"
+import Image from "next/image"
 
-export default function Logo() {
+interface LogoProps {
+  className?: string
+  size?: "sm" | "md" | "lg"
+  showIcon?: boolean
+}
+
+export default function Logo({ className = "", size = "md", showIcon = true }: LogoProps) {
+  const sizes = {
+    sm: "text-lg",
+    md: "text-2xl",
+    lg: "text-4xl",
+  }
+
+  const iconSizes = {
+    sm: "h-6 w-6",
+    md: "h-10 w-10",
+    lg: "h-16 w-16",
+  }
+
   return (
-    <Link href="/" className="flex items-center space-x-2 group">
-      <div className="relative">
-        <Coffee className="h-8 w-8 text-yellow-500 group-hover:text-yellow-400 transition-colors duration-300" />
-        <div className="absolute inset-0 bg-yellow-400 rounded-full blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-300" />
-      </div>
-      <span className="text-2xl font-bold bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 bg-clip-text text-transparent">
+    <Link href="/" className={`inline-flex items-center gap-3 ${className}`}>
+      {showIcon && (
+        <div className="relative">
+          <Image
+            src="/images/tapri-logo.jpeg"
+            alt="Tapri Logo"
+            width={size === "sm" ? 24 : size === "md" ? 40 : 64}
+            height={size === "sm" ? 24 : size === "md" ? 40 : 64}
+            className={`${iconSizes[size]} object-contain`}
+          />
+        </div>
+      )}
+      <span
+        className={`${sizes[size]} font-bold bg-gradient-to-r from-yellow-600 via-red-500 to-black bg-clip-text text-transparent`}
+      >
         Tapri
       </span>
     </Link>
