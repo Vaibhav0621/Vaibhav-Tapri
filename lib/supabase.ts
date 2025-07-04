@@ -1,48 +1,47 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "./database.types"
 
-// Your Supabase configuration
-const supabaseUrl = "https://rvflrwmfxgmxjnecsoba.supabase.co"
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2Zmxyd21meGdteGpuZWNzb2JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxOTEzMDQsImV4cCI6MjA2Mzc2NzMwNH0.EqTo6E-qtiG3iR5191JwIwubGrEyQhaClx6Rb7LPoS0"
+// Environment variables with validation
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-// Create the main Supabase client
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Missing Supabase environment variables")
+}
+
+// For client-side operations
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
     autoRefreshToken: true,
+    persistSession: true,
     detectSessionInUrl: true,
   },
 })
 
-// Helper function to check if Supabase is properly configured
-export const isSupabaseConfigured = () => {
-  return !!(supabaseUrl && supabaseAnonKey && supabaseUrl.includes("supabase.co"))
-}
-
-// Server-side client for API routes
-export const createServerClient = () => {
+// For server components - simplified version
+export const createSupabaseServerClient = () => {
   return createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
-      persistSession: false,
       autoRefreshToken: false,
+      persistSession: false,
     },
   })
 }
 
-// Admin client (if service role key is available)
-export const createAdminClient = () => {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!serviceRoleKey) {
-    throw new Error("Service role key not configured")
-  }
+// For admin operations (server-side only)
+export const supabaseAdmin = supabaseServiceRoleKey
+  ? createClient<Database>(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+  : supabase
 
-  return createClient<Database>(supabaseUrl, serviceRoleKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  })
+// Helper to check if Supabase is properly configured
+export const isSupabaseConfigured = () => {
+  return !!(supabaseUrl && supabaseAnonKey && supabaseUrl.includes("supabase.co"))
 }
 
 // Helper to check database connectivity
@@ -54,3 +53,6 @@ export const checkDatabaseConnection = async () => {
     return false
   }
 }
+
+// Helper function to check if admin client is available
+export const isAdminAvailable = () => !!supabaseServiceRoleKey

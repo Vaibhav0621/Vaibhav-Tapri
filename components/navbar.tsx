@@ -27,7 +27,7 @@ export default function Navbar() {
   }, [])
 
   const toggleTheme = () => {
-    setTheme(resolvedTheme === "light" ? "dark" : "light")
+    setTheme(theme === "light" ? "dark" : "light")
   }
 
   if (!mounted) {
@@ -58,12 +58,6 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-yellow-600 transition-colors font-medium text-sm whitespace-nowrap"
               >
                 Browse Tapris
-              </Link>
-              <Link
-                href="/talents"
-                className="text-foreground/80 hover:text-yellow-600 transition-colors font-medium text-sm whitespace-nowrap"
-              >
-                Browse Talents
               </Link>
               <Link
                 href="/courses"
@@ -203,13 +197,6 @@ export default function Navbar() {
                 Browse Tapris
               </Link>
               <Link
-                href="/talents"
-                className="block px-3 py-2 text-base font-medium text-foreground/80 hover:text-yellow-600 hover:bg-accent rounded-md"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Browse Talents
-              </Link>
-              <Link
                 href="/courses"
                 className="block px-3 py-2 text-base font-medium text-foreground/80 hover:text-yellow-600 hover:bg-accent rounded-md"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -280,7 +267,7 @@ export default function Navbar() {
               ) : (
                 <div className="pt-4 border-t space-y-2">
                   <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full font-medium bg-transparent">
+                    <Button variant="outline" className="w-full font-medium">
                       Sign In
                     </Button>
                   </Link>

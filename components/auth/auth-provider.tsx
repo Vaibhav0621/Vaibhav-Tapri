@@ -16,11 +16,18 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error?: any }>
   signUp: (email: string, password: string, name: string) => Promise<{ error?: any }>
   signOut: () => Promise<void>
-  updateProfile: (updates: Partial<Profile>) => Promise<void>
+  updateProfile: (updates: any) => Promise<void>
   refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+// Function to check if Supabase is configured (replace with your actual check)
+const isSupabaseConfigured = () => {
+  // Replace this with your actual check for Supabase configuration
+  // For example, check if the Supabase URL and key are set
+  return !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -28,42 +35,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchProfile = async (userId: string): Promise<Profile | null> => {
+  const fetchProfile = async (userId: string) => {
+    // Check if Supabase is properly configured first
+    if (!isSupabaseConfigured()) {
+      // Return mock profile for demo
+      return {
+        id: userId,
+        email: user?.email || "demo@tapri.com",
+        full_name: "Demo User",
+        avatar_url: "/placeholder.svg?height=100&width=100&text=DU",
+        bio: "Demo user for Tapri platform",
+        role: "user",
+        is_admin: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    }
+
     try {
       const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single()
 
       if (error) {
-        console.warn("Error fetching profile:", error.message)
-        // Create a default profile if it doesn't exist
-        const defaultProfile: Profile = {
+        // If the table doesn't exist or other database errors, return mock profile
+        console.warn("Database not fully configured, using demo profile:", error.message)
+        return {
           id: userId,
-          email: user?.email || "",
-          full_name: user?.user_metadata?.full_name || "User",
-          avatar_url: null,
-          bio: null,
+          email: user?.email || "demo@tapri.com",
+          full_name: user?.user_metadata?.full_name || "Demo User",
+          avatar_url: "/placeholder.svg?height=100&width=100&text=DU",
+          bio: "Demo user for Tapri platform",
           role: "user",
           is_admin: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
-        return defaultProfile
       }
 
       return data
     } catch (error) {
-      console.error("Error fetching profile:", error)
-      return null
+      console.warn("Error fetching profile, using demo profile:", error)
+      return {
+        id: userId,
+        email: user?.email || "demo@tapri.com",
+        full_name: user?.user_metadata?.full_name || "Demo User",
+        avatar_url: "/placeholder.svg?height=100&width=100&text=DU",
+        bio: "Demo user for Tapri platform",
+        role: "user",
+        is_admin: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
     }
   }
 
   const refreshProfile = async () => {
     if (user) {
-      try {
-        const profileData = await fetchProfile(user.id)
-        setProfile(profileData)
-      } catch (error) {
-        console.error("Error refreshing profile:", error)
-      }
+      const profileData = await fetchProfile(user.id)
+      setProfile(profileData)
     }
   }
 
@@ -100,6 +128,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error }
       }
 
+      // Don't try to create profile if database isn't set up
+      if (!isSupabaseConfigured()) {
+        console.log("Demo mode: User signup successful")
+      }
+
       return { error: null }
     } catch (error) {
       return { error }
@@ -107,26 +140,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut()
-    } catch (error) {
-      console.error("Error signing out:", error)
-    } finally {
-      setUser(null)
-      setProfile(null)
-      setSession(null)
-    }
+    await supabase.auth.signOut()
+    setUser(null)
+    setProfile(null)
+    setSession(null)
   }
 
-  const updateProfile = async (updates: Partial<Profile>) => {
+  const updateProfile = async (updates: any) => {
     if (!user) return
+
+    // If database isn't configured, just update local state
+    if (!isSupabaseConfigured()) {
+      console.log("Demo mode: Profile update", updates)
+      setProfile((prev) => (prev ? { ...prev, ...updates } : null))
+      return
+    }
 
     try {
       const { data, error } = await supabase.from("profiles").update(updates).eq("id", user.id).select().single()
 
       if (error) {
-        console.warn("Error updating profile:", error)
-        // Update local state even if database update fails
+        // If table doesn't exist, just update local state
+        console.warn("Database not configured, updating local profile only")
         setProfile((prev) => (prev ? { ...prev, ...updates } : null))
         return
       }
@@ -134,23 +169,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(data)
     } catch (error) {
       console.warn("Error updating profile:", error)
+      // Fallback to local state update
       setProfile((prev) => (prev ? { ...prev, ...updates } : null))
     }
   }
 
   useEffect(() => {
-    let mounted = true
-
+    // Get initial session
     const getInitialSession = async () => {
-      if (!mounted) return
-
       try {
         const {
           data: { session },
           error,
         } = await supabase.auth.getSession()
-
-        if (!mounted) return
 
         if (error) {
           console.error("Error getting session:", error)
@@ -160,17 +191,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (session?.user) {
             const profileData = await fetchProfile(session.user.id)
-            if (mounted) {
-              setProfile(profileData)
-            }
+            setProfile(profileData)
           }
         }
       } catch (error) {
         console.error("Error in getInitialSession:", error)
       } finally {
-        if (mounted) {
-          setLoading(false)
-        }
+        setLoading(false)
       }
     }
 
@@ -180,48 +207,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return
-
       setSession(session)
       setUser(session?.user ?? null)
 
       if (session?.user) {
-        try {
-          const profileData = await fetchProfile(session.user.id)
-          if (mounted) {
-            setProfile(profileData)
-          }
-        } catch (error) {
-          console.error("Error fetching profile on auth change:", error)
-        }
+        const profileData = await fetchProfile(session.user.id)
+        setProfile(profileData)
       } else {
         setProfile(null)
       }
 
-      if (mounted) {
-        setLoading(false)
-      }
+      setLoading(false)
     })
 
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
-  }, [user])
+    return () => subscription.unsubscribe()
+  }, [])
 
-  const contextValue: AuthContextType = {
-    user,
-    profile,
-    session,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-    updateProfile,
-    refreshProfile,
-  }
-
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        session,
+        loading,
+        signIn,
+        signUp,
+        signOut,
+        updateProfile,
+        refreshProfile,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

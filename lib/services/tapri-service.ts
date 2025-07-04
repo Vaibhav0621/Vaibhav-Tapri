@@ -1,136 +1,279 @@
-import { createServerClient } from "@/lib/supabase"
+import { createSupabaseServerClient, supabaseAdmin, isSupabaseConfigured } from "@/lib/supabase"
 import type { Database } from "@/lib/database.types"
 
 type Tapri = Database["public"]["Tables"]["tapris"]["Row"]
+type TapriInsert = Database["public"]["Tables"]["tapris"]["Insert"]
+type TapriUpdate = Database["public"]["Tables"]["tapris"]["Update"]
 
 export class TapriService {
-  private supabase = createServerClient()
+  // Get all approved tapris with pagination
+  static async getApprovedTapris(page = 1, limit = 12, category?: string, stage?: string) {
+    if (!isSupabaseConfigured()) {
+      throw new Error("Database not configured")
+    }
 
-  async getAllTapris(filters?: {
-    search?: string
-    category?: string
-    stage?: string
-    location?: string
-  }): Promise<{ tapris: Tapri[]; error?: string }> {
-    try {
-      let query = this.supabase
-        .from("tapris")
-        .select("*")
-        .eq("status", "approved")
-        .order("created_at", { ascending: false })
+    const supabase = createSupabaseServerClient()
 
-      // Apply filters
-      if (filters?.search) {
-        query = query.or(
-          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,tagline.ilike.%${filters.search}%`,
+    let query = supabase
+      .from("tapris")
+      .select(`
+        *,
+        profiles:creator_id (
+          full_name,
+          avatar_url
         )
-      }
+      `)
+      .eq("status", "approved")
 
-      if (filters?.category && filters.category !== "all") {
-        query = query.eq("category", filters.category)
-      }
-
-      if (filters?.stage && filters.stage !== "all") {
-        query = query.eq("stage", filters.stage)
-      }
-
-      if (filters?.location && filters.location !== "all") {
-        query = query.eq("location", filters.location)
-      }
-
-      const { data: tapris, error } = await query
-
-      if (error) {
-        console.error("Error fetching tapris:", error)
-        return { tapris: [], error: "Failed to fetch tapris" }
-      }
-
-      return { tapris: tapris || [] }
-    } catch (error) {
-      console.error("Service error:", error)
-      return { tapris: [], error: "Service error occurred" }
+    if (category && category !== "all") {
+      query = query.eq("category", category)
     }
+
+    if (stage && stage !== "all") {
+      query = query.eq("stage", stage)
+    }
+
+    const { data, error, count } = await query
+      .range((page - 1) * limit, page * limit - 1)
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching tapris:", error)
+      throw error
+    }
+
+    return { data: data || [], count: count || 0 }
   }
 
-  async getTapriById(id: string): Promise<{ tapri: Tapri | null; error?: string }> {
-    try {
-      const { data: tapri, error } = await this.supabase.from("tapris").select("*").eq("id", id).single()
-
-      if (error) {
-        console.error("Error fetching tapri:", error)
-        return { tapri: null, error: "Tapri not found" }
-      }
-
-      return { tapri }
-    } catch (error) {
-      console.error("Service error:", error)
-      return { tapri: null, error: "Service error occurred" }
+  // Get single tapri by ID with all related data
+  static async getTapriById(id: string) {
+    if (!isSupabaseConfigured()) {
+      throw new Error("Database not configured")
     }
+
+    const supabase = createSupabaseServerClient()
+
+    const { data, error } = await supabase
+      .from("tapris")
+      .select(`
+        *,
+        profiles:creator_id (
+          full_name,
+          avatar_url,
+          email,
+          bio
+        )
+      `)
+      .eq("id", id)
+      .single()
+
+    if (error) {
+      console.error("Error fetching tapri:", error)
+      throw error
+    }
+
+    // Increment view count
+    await supabase
+      .from("tapris")
+      .update({ views: (data.views || 0) + 1 })
+      .eq("id", id)
+
+    return { data }
   }
 
-  async getTapriBySlug(slug: string): Promise<{ tapri: Tapri | null; error?: string }> {
-    try {
-      const { data: tapri, error } = await this.supabase.from("tapris").select("*").eq("slug", slug).single()
-
-      if (error) {
-        console.error("Error fetching tapri by slug:", error)
-        return { tapri: null, error: "Tapri not found" }
-      }
-
-      return { tapri }
-    } catch (error) {
-      console.error("Service error:", error)
-      return { tapri: null, error: "Service error occurred" }
+  // Create new tapri
+  static async createTapri(tapriData: TapriInsert, userId: string) {
+    if (!isSupabaseConfigured()) {
+      throw new Error("Database not configured")
     }
+
+    const supabase = createSupabaseServerClient()
+
+    const { data, error } = await supabase
+      .from("tapris")
+      .insert({
+        ...tapriData,
+        creator_id: userId,
+        status: "pending",
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Error creating tapri:", error)
+      throw error
+    }
+
+    return data
   }
 
-  async createTapri(tapriData: Partial<Tapri>): Promise<{ tapri: Tapri | null; error?: string }> {
-    try {
-      const { data: tapri, error } = await this.supabase.from("tapris").insert([tapriData]).select().single()
-
-      if (error) {
-        console.error("Error creating tapri:", error)
-        return { tapri: null, error: "Failed to create tapri" }
-      }
-
-      return { tapri }
-    } catch (error) {
-      console.error("Service error:", error)
-      return { tapri: null, error: "Service error occurred" }
+  // Update tapri
+  static async updateTapri(id: string, updates: TapriUpdate, userId: string) {
+    if (!isSupabaseConfigured()) {
+      throw new Error("Database not configured")
     }
+
+    const supabase = createSupabaseServerClient()
+
+    const { data, error } = await supabase
+      .from("tapris")
+      .update(updates)
+      .eq("id", id)
+      .eq("creator_id", userId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Error updating tapri:", error)
+      throw error
+    }
+
+    return data
   }
 
-  async updateTapri(id: string, updates: Partial<Tapri>): Promise<{ tapri: Tapri | null; error?: string }> {
-    try {
-      const { data: tapri, error } = await this.supabase.from("tapris").update(updates).eq("id", id).select().single()
-
-      if (error) {
-        console.error("Error updating tapri:", error)
-        return { tapri: null, error: "Failed to update tapri" }
-      }
-
-      return { tapri }
-    } catch (error) {
-      console.error("Service error:", error)
-      return { tapri: null, error: "Service error occurred" }
+  // Get user's tapris
+  static async getUserTapris(userId: string) {
+    if (!isSupabaseConfigured()) {
+      throw new Error("Database not configured")
     }
+
+    const supabase = createSupabaseServerClient()
+
+    const { data, error } = await supabase
+      .from("tapris")
+      .select(`
+        *,
+        applications (
+          id,
+          status
+        )
+      `)
+      .eq("creator_id", userId)
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching user tapris:", error)
+      throw error
+    }
+
+    return data || []
   }
 
-  async deleteTapri(id: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { error } = await this.supabase.from("tapris").delete().eq("id", id)
-
-      if (error) {
-        console.error("Error deleting tapri:", error)
-        return { success: false, error: "Failed to delete tapri" }
-      }
-
-      return { success: true }
-    } catch (error) {
-      console.error("Service error:", error)
-      return { success: false, error: "Service error occurred" }
+  // Admin functions
+  static async getPendingTapris() {
+    if (!isSupabaseConfigured()) {
+      throw new Error("Database not configured")
     }
+
+    const { data, error } = await supabaseAdmin
+      .from("tapris")
+      .select(`
+        *,
+        profiles:creator_id (
+          full_name,
+          email
+        )
+      `)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching pending tapris:", error)
+      throw error
+    }
+
+    return data || []
+  }
+
+  static async approveTapri(id: string) {
+    if (!isSupabaseConfigured()) {
+      throw new Error("Database not configured")
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("tapris")
+      .update({
+        status: "approved",
+        published_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Error approving tapri:", error)
+      throw error
+    }
+
+    return data
+  }
+
+  static async rejectTapri(id: string) {
+    if (!isSupabaseConfigured()) {
+      throw new Error("Database not configured")
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("tapris")
+      .update({ status: "rejected" })
+      .eq("id", id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Error rejecting tapri:", error)
+      throw error
+    }
+
+    return data
+  }
+
+  // Search tapris
+  static async searchTapris(
+    query: string,
+    filters?: {
+      category?: string
+      stage?: string
+      location?: string
+    },
+  ) {
+    if (!isSupabaseConfigured()) {
+      throw new Error("Database not configured")
+    }
+
+    const supabase = createSupabaseServerClient()
+
+    let dbQuery = supabase
+      .from("tapris")
+      .select(`
+        *,
+        profiles:creator_id (
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq("status", "approved")
+      .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+
+    if (filters?.category && filters.category !== "all") {
+      dbQuery = dbQuery.eq("category", filters.category)
+    }
+
+    if (filters?.stage && filters.stage !== "all") {
+      dbQuery = dbQuery.eq("stage", filters.stage)
+    }
+
+    if (filters?.location && filters.location !== "all") {
+      dbQuery = dbQuery.eq("location", filters.location)
+    }
+
+    const { data, error } = await dbQuery.order("created_at", { ascending: false }).limit(20)
+
+    if (error) {
+      console.error("Error searching tapris:", error)
+      throw error
+    }
+
+    return data || []
   }
 }
-
-export const tapriService = new TapriService()
