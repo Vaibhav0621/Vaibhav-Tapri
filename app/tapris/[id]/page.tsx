@@ -1,38 +1,35 @@
 import Link from "next/link"
 import Image from "next/image"
-import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 import { Progress } from "@/components/ui/progress"
-import { TapriService } from "@/lib/services/tapri-service"
-import { motion } from "framer-motion"
 import {
   MapPin,
   Users,
+  Calendar,
+  DollarSign,
+  MessageCircle,
+  Video,
+  Star,
   Briefcase,
+  GraduationCap,
   Target,
-  Zap,
+  TrendingUp,
+  Award,
+  ExternalLink,
+  Mail,
   CheckCircle,
   Circle,
-  Mail,
   Globe,
-  Star,
+  Building,
+  Zap,
 } from "lucide-react"
-
-interface TapriData {
-  id: string
-  siteName: string
-  title: string
-  description: string
-  category: string
-  bannerImage: string
-  logoImage: string
-  status: string
-  primaryColor: string
-}
+import { getTapriById } from "@/data/tapris"
+import { TapriService } from "@/lib/services/tapri-service"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { notFound } from "next/navigation"
 
 interface TapriDetailPageProps {
   params: {
@@ -40,644 +37,849 @@ interface TapriDetailPageProps {
   }
 }
 
-export default async function TapriDetailPage({ params }: TapriDetailPageProps) {
-  if (!params?.id) {
-    console.error('Missing ID in params')
-    notFound()
+// Convert database tapri to display format
+function convertDatabaseTapri(dbTapri: any) {
+  return {
+    id: dbTapri.id,
+    title: dbTapri.title,
+    tagline: dbTapri.tagline || "Building something amazing",
+    description: dbTapri.description,
+    fullDescription:
+      dbTapri.description +
+      " This project is currently in development and looking for passionate team members to join our mission.",
+    category: dbTapri.category || "Technology",
+    stage: dbTapri.stage || "Development",
+    location: dbTapri.location || "Remote",
+    teamSize: dbTapri.team_size || 1,
+    openPositions: dbTapri.open_positions || 1,
+    website: dbTapri.website_url,
+    bannerImage: dbTapri.banner_url || "/placeholder.svg?height=500&width=1200",
+    logoImage: dbTapri.logo_url || "/placeholder.svg?height=120&width=120",
+    status: "recruiting" as const,
+    views: dbTapri.views || 0,
+    applications: dbTapri.applications || 0,
+    createdAt: dbTapri.created_at || new Date().toISOString(),
+    requiredSkills: dbTapri.required_skills || ["General Skills"],
+
+    // Default values for detailed information
+    mission: "To create innovative solutions that make a positive impact on the world.",
+    vision: "Building the future through technology and collaboration.",
+    problemStatement: "We're solving important challenges in our industry.",
+    solution: "Our innovative approach combines cutting-edge technology with user-centered design.",
+    targetAudience: "Forward-thinking individuals and organizations looking for innovative solutions.",
+    businessModel: "Sustainable growth through value creation and strategic partnerships.",
+
+    currentTasks: [
+      "Developing core product features",
+      "Building user interface and experience",
+      "Testing and quality assurance",
+      "Market research and validation",
+      "Team building and recruitment",
+    ],
+
+    futurePlans: [
+      "Launch beta version to early users",
+      "Expand team with key hires",
+      "Develop strategic partnerships",
+      "Scale product and user base",
+      "Explore funding opportunities",
+    ],
+
+    milestones: [
+      { title: "Project Initiation", description: "Started the project and defined goals", completed: true },
+      {
+        title: "MVP Development",
+        description: "Building minimum viable product",
+        completed: false,
+        dueDate: "2024-06-30",
+      },
+      { title: "Beta Launch", description: "Launch to early users", completed: false, dueDate: "2024-09-30" },
+      { title: "Public Launch", description: "Full public release", completed: false, dueDate: "2024-12-31" },
+    ],
+
+    teamLeader: {
+      name: dbTapri.profiles?.full_name || "Project Creator",
+      role: "Founder & CEO",
+      bio: "Passionate entrepreneur and innovator dedicated to building impactful solutions.",
+      image: dbTapri.profiles?.avatar_url || "/placeholder.svg?height=120&width=120",
+      linkedin: "#",
+      twitter: "#",
+      achievements: [
+        "Founded this innovative project",
+        "Experienced in technology and business",
+        "Committed to making a positive impact",
+      ],
+    },
+
+    teamMembers: [
+      {
+        name: "Team Member",
+        role: "Co-founder",
+        bio: "Dedicated team member working on this exciting project.",
+        image: "/placeholder.svg?height=60&width=60",
+        linkedin: "#",
+        isCore: true,
+      },
+    ],
+
+    openRoles: [
+      {
+        id: "general-role",
+        title: "Team Member",
+        type: "General" as const,
+        experienceLevel: "All Levels" as const,
+        description:
+          "Join our team and help build something amazing. We're looking for passionate individuals who want to make a difference.",
+        responsibilities: [
+          "Contribute to project development",
+          "Collaborate with team members",
+          "Help achieve project milestones",
+          "Bring your unique skills and perspective",
+        ],
+        requirements: [
+          "Passion for innovation and technology",
+          "Strong communication skills",
+          "Ability to work in a team environment",
+          "Commitment to project success",
+        ],
+        skills: dbTapri.required_skills || ["General Skills"],
+        timeCommitment: "Flexible",
+        compensation: "Equity + Experience",
+      },
+    ],
+
+    eligibilityCriteria: [
+      "Passionate about the project mission",
+      "Strong work ethic and dedication",
+      "Good communication skills",
+      "Ability to work collaboratively",
+    ],
+
+    benefits: [
+      "Gain valuable startup experience",
+      "Work with cutting-edge technology",
+      "Flexible work arrangements",
+      "Opportunity for growth and learning",
+      "Be part of an innovative team",
+    ],
+
+    learningOutcomes: [
+      "Develop technical and business skills",
+      "Learn about startup operations",
+      "Gain experience in product development",
+      "Build professional network",
+    ],
+
+    metrics: {
+      funding: "Bootstrapped",
+      users: "Growing",
+      growth: "Steady",
+      partnerships: 0,
+    },
+
+    gallery: [
+      dbTapri.banner_url || "/placeholder.svg?height=300&width=400",
+      dbTapri.logo_url || "/placeholder.svg?height=300&width=400",
+    ],
+
+    documents: [],
+
+    applicationProcess: [
+      "Submit application through our form",
+      "Initial conversation with team",
+      "Skills and fit assessment",
+      "Welcome to the team!",
+    ],
+
+    contactEmail: "contact@tapri.com",
+    applicationFormUrl: `https://web3forms.com/forms/f3993f73-3c04-4f7b-ad60-630c82bb01cc?tapri_id=${dbTapri.id}&tapri_title=${encodeURIComponent(dbTapri.title)}`,
   }
-
-  let tapri: TapriData | null = null
-  try {
-    const { data } = await TapriService.getTapriById(params.id)
-    tapri = data ? convertDatabaseTapri(data) : null
-  } catch (error) {
-    console.error('Error fetching tapri:', error)
-  }
-
-  if (!tapri) {
-    console.error('Tapri not found for ID:', params.id)
-    notFound()
-  }
-
-  const getStatusColor = (status: string): string => {
-    switch (status.toLowerCase()) {
-      case 'active': return `bg-${tapri.primaryColor}-500/20 text-${tapri.primaryColor}-400`
-      case 'recruiting': return `bg-${tapri.primaryColor}-600/20 text-${tapri.primaryColor}-500`
-      case 'launching': return `bg-${tapri.primaryColor}-700/20 text-${tapri.primaryColor}-600`
-      default: return 'bg-gray-700 text-gray-400'
-    }
-  }
-
-  const milestones = [
-    { title: 'Vibe Check ✅', description: 'Kicked off with max energy', completed: true },
-    { title: 'MVP Drop', description: 'Dropping the hottest features soon', completed: false, dueDate: 'Dec 2025' },
-    { title: 'Global Domination', description: 'Taking over the world, no cap', completed: false, dueDate: 'June 2026' },
-  ]
-
-  const teamMembers = [
-    { name: 'Zoe Sparks', role: 'Chief Vibe Officer', bio: 'Keeping the energy 💯.', image: '/placeholder.svg?height=120&width=120' },
-    { name: 'Kai Blaze', role: 'Tech Wizard 🧙‍♂️', bio: 'Coding bangers.', image: '/placeholder.svg?height=120&width=120' },
-  ]
-
-  const openRoles = [
-    { title: 'Frontend Rockstar', type: 'Full-time', description: 'Build lit UIs.', skills: ['React', 'Tailwind', 'Vibes'] },
-    { title: 'Meme Marketing Guru', type: 'Part-time', description: 'Create viral content 🔥.', skills: ['TikTok', 'Memes', 'Clout'] },
-  ]
-
-  const testimonials = [
-    { name: 'Riley Hype', role: 'Stan', quote: 'This startup is giving main character energy! 😍', image: '/placeholder.svg?height=120&width=120' },
-    { name: 'Jordan Flex', role: 'Hypebeast', quote: 'No cap, this is the future. 🏆', image: '/placeholder.svg?height=120&width=120' },
-  ]
-
-  const progressPercentage = (milestones.filter((m) => m.completed).length / milestones.length) * 100
-
-  return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white font-sans">
-      <Header tapri={tapri} primaryColor={tapri.primaryColor} />
-
-      <motion.section
-        id="overview"
-        className="relative w-full h-[90vh] flex items-center justify-center overflow-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.2 }}
-      >
-        <div className="absolute inset-0">
-          <Image
-            src={tapri.bannerImage}
-            alt={tapri.title}
-            fill
-            className="object-cover opacity-40 scale-110"
-            priority
-          />
-          <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-${tapri.primaryColor}-900/30 to-transparent`} />
-        </div>
-        <div className="container px-4 md:px-6 text-center relative z-10">
-          <motion.div
-            className="relative inline-block"
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-          >
-            <h1
-              className={`text-5xl md:text-8xl font-extrabold text-${tapri.primaryColor}-400 drop-shadow-2xl glitch`}
-              data-text={tapri.title}
-            >
-              {tapri.title}
-            </h1>
-          </motion.div>
-          <motion.p
-            className="text-xl md:text-3xl text-gray-200 mt-6 mb-8 max-w-3xl mx-auto font-light"
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-          >
-            {tapri.description} 🚀
-          </motion.p>
-          <motion.div
-            className="flex justify-center gap-4 mb-8"
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.8 }}
-          >
-            <Badge className={`${getStatusColor(tapri.status)} font-semibold px-4 py-1 text-sm animate-pulse`}>
-              {tapri.status === 'recruiting' ? 'Hiring RN! 🔥' : tapri.status.toUpperCase()}
-            </Badge>
-            <Badge variant="outline" className={`border-${tapri.primaryColor}-500 text-${tapri.primaryColor}-400 bg-${tapri.primaryColor}-500/10`}>
-              {tapri.category} Vibes
-            </Badge>
-          </motion.div>
-          <motion.div
-            className="flex justify-center gap-6"
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.9, duration: 0.8 }}
-          >
-            <Link href="#contact">
-              <Button
-                className={`bg-${tapri.primaryColor}-600 hover:bg-${tapri.primaryColor}-700 text-white px-10 py-4 text-lg rounded-full transform hover:scale-110 transition-transform shadow-lg`}
-              >
-                Hit Us Up 😎
-              </Button>
-            </Link>
-            <Link href="#roles">
-              <Button
-                variant="outline"
-                className={`border-${tapri.primaryColor}-500 text-${tapri.primaryColor}-400 hover:bg-${tapri.primaryColor}-500/20 px-10 py-4 text-lg rounded-full transform hover:scale-110 transition-transform`}
-              >
-                Join the Squad
-              </Button>
-            </Link>
-          </motion.div>
-        </div>
-      </motion.section>
-
-      <motion.section
-        className="w-full py-12 bg-gray-900/70 backdrop-blur-sm"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="container px-4 md:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <motion.div initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 }}>
-              <div className={`text-5xl font-extrabold text-${tapri.primaryColor}-400 animate-bounce`}>1K+</div>
-              <div className="text-sm text-gray-400">Eyeballs 👀</div>
-            </motion.div>
-            <motion.div initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} transition={{ delay: 0.3 }}>
-              <div className={`text-5xl font-extrabold text-${tapri.primaryColor}-400 animate-bounce`}>50+</div>
-              <div className="text-sm text-gray-400">Applications 📩</div>
-            </motion.div>
-            <motion.div initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4 }}>
-              <div className={`text-5xl font-extrabold text-${tapri.primaryColor}-400 animate-bounce`}>5+</div>
-              <div className="text-sm text-gray-400">Crew 😎</div>
-            </motion.div>
-            <motion.div initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} transition={{ delay: 0.5 }}>
-              <div className={`text-5xl font-extrabold text-${tapri.primaryColor}-400 animate-bounce`}>2+</div>
-              <div className="text-sm text-gray-400">Open Gigs 💼</div>
-            </motion.div>
-          </div>
-        </div>
-      </motion.section>
-
-      <motion.section
-        id="about"
-        className="w-full py-16"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="container px-4 md:px-6">
-          <h2 className={`text-4xl md:text-5xl font-bold text-center mb-12 text-${tapri.primaryColor}-400 animate-pulse`}>
-            Who We Are 🫶
-          </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <motion.div
-              className="space-y-6"
-              initial={{ x: -50, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
-            >
-              <p className="text-lg text-gray-300 leading-relaxed">{tapri.description}</p>
-              <div>
-                <h3 className={`text-xl font-semibold text-${tapri.primaryColor}-400`}>Our Vibe</h3>
-                <p className="text-gray-400">We’re here to shake things up and build something iconic. No boring stuff, just pure 🔥.</p>
-              </div>
-              <div>
-                <h3 className={`text-xl font-semibold text-${tapri.primaryColor}-400`}>Our Goal</h3>
-                <p className="text-gray-400">Slay the game and make the world stan our vision. Join the revolution! 🚀</p>
-              </div>
-            </motion.div>
-            <motion.div
-              className="relative h-96 rounded-2xl overflow-hidden shadow-2xl"
-              initial={{ x: 50, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
-            >
-              <Image src={tapri.bannerImage} alt="About Us" fill className="object-cover opacity-80" />
-              <div className={`absolute inset-0 bg-gradient-to-r from-${tapri.primaryColor}-500/40 to-transparent`} />
-              <div className="absolute bottom-4 left-4 text-white">
-                <p className="text-lg font-bold">Ready to Join the Hype? 😎</p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </motion.section>
-
-      <motion.section
-        id="services"
-        className="w-full py-16 bg-gray-900/70"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="container px-4 md:px-6">
-          <h2 className={`text-4xl md:text-5xl font-bold text-center mb-12 text-${tapri.primaryColor}-400 animate-pulse`}>
-            What We Bring to the Table 🍽️
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-            >
-              <Card className="bg-gray-800 border-none shadow-2xl hover:scale-105 transition-transform rounded-2xl">
-                <CardHeader>
-                  <CardTitle className={`text-xl font-semibold text-${tapri.primaryColor}-400 flex items-center gap-2`}>
-                    <Target className="h-6 w-6 animate-spin-slow" />
-                    Big Brain Solutions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-400">Cooking up next-level tech to solve real problems. 😋</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-            <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-            >
-              <Card className="bg-gray-800 border-none shadow-2xl hover:scale-105 transition-transform rounded-2xl">
-                <CardHeader>
-                  <CardTitle className={`text-xl font-semibold text-${tapri.primaryColor}-400 flex items-center gap-2`}>
-                    <Briefcase className="h-6 w-6 animate-bounce" />
-                    Hustle Mode
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-400">Growth, collabs, and keeping it 100. 📈</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-            <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-            >
-              <Card className="bg-gray-800 border-none shadow-2xl hover:scale-105 transition-transform rounded-2xl">
-                <CardHeader>
-                  <CardTitle className={`text-xl font-semibold text-${tapri.primaryColor}-400 flex items-center gap-2`}>
-                    <Zap className="h-6 w-6 animate-pulse" />
-                    Current Slay
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-400">Dropping bangers that pop off. 💥</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        </div>
-      </motion.section>
-
-      <motion.section
-        id="team"
-        className="w-full py-16"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="container px-4 md:px-6">
-          <h2 className={`text-4xl md:text-5xl font-bold text-center mb-12 text-${tapri.primaryColor}-400 animate-pulse`}>
-            Our Squad 😎
-          </h2>
-          <Tabs defaultValue="members" className="w-full">
-            <TabsList className="flex w-full bg-gray-900 border-b border-gray-700 mb-8 rounded-xl">
-              <TabsTrigger
-                value="members"
-                className={`flex-1 text-center py-4 text-lg font-semibold text-gray-300 data-[state=active]:text-${tapri.primaryColor}-400 data-[state=active]:border-b-4 data-[state=active]:border-${tapri.primaryColor}-400 rounded-t-lg`}
-              >
-                The Crew
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="members">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {teamMembers.map((member, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ y: 50, opacity: 0 }}
-                    whileInView={{ y: 0, opacity: 1 }}
-                    transition={{ delay: index * 0.2, duration: 0.6 }}
-                  >
-                    <Card className="bg-gray-800 border-none shadow-2xl hover:scale-105 transition-transform rounded-2xl overflow-hidden">
-                      <CardContent className="p-6 text-center">
-                        <div className="relative h-24 w-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-gray-700">
-                          <Image src={member.image} alt={member.name} fill className="object-cover" />
-                        </div>
-                        <h3 className="text-xl font-semibold">{member.name}</h3>
-                        <p className={`text-${tapri.primaryColor}-400 text-sm font-bold`}>{member.role}</p>
-                        <p className="text-sm text-gray-400 mt-2">{member.bio}</p>
-                        <Button
-                          variant="outline"
-                          className={`mt-4 border-${tapri.primaryColor}-500 text-${tapri.primaryColor}-400 hover:bg-${tapri.primaryColor}-500/20 rounded-full`}
-                        >
-                          Connect 🤙
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </motion.section>
-
-      <motion.section
-        id="roles"
-        className="w-full py-16 bg-gray-900/70"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="container px-4 md:px-6">
-          <h2 className={`text-4xl md:text-5xl font-bold text-center mb-12 text-${tapri.primaryColor}-400 animate-pulse`}>
-            Join the Glow-Up 💼
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {openRoles.map((role, index) => (
-              <motion.div
-                key={index}
-                initial={{ y: 50, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ delay: index * 0.2, duration: 0.6 }}
-              >
-                <Card className="bg-gray-800 border-none shadow-2xl hover:scale-105 transition-transform rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="text-lg font-semibold">{role.title}</CardTitle>
-                    <Badge variant="outline" className={`border-${tapri.primaryColor}-500 text-${tapri.primaryColor}-400 bg-${tapri.primaryColor}-500/10`}>
-                      {role.type}
-                    </Badge>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-gray-400">{role.description}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {role.skills.map((skill, i) => (
-                        <Badge key={i} variant="secondary" className="bg-gray-700 text-gray-300 rounded-full">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                    <Link href="#contact">
-                      <Button
-                        className={`w-full bg-${tapri.primaryColor}-600 hover:bg-${tapri.primaryColor}-700 rounded-full transform hover:scale-105 transition-transform`}
-                      >
-                        Apply Now ✨
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
-
-      <motion.section
-        id="roadmap"
-        className="w-full py-16"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="container px-4 md:px-6">
-          <h2 className={`text-4xl md:text-5xl font-bold text-center mb-12 text-${tapri.primaryColor}-400 animate-pulse`}>
-            Our Glow-Up Plan 🌟
-          </h2>
-          <Progress
-            value={progressPercentage}
-            className={`h-4 bg-gray-700 mb-8 rounded-full`}
-            indicatorClassName={`bg-${tapri.primaryColor}-500 rounded-full`}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {milestones.map((milestone, index) => (
-              <motion.div
-                key={index}
-                initial={{ y: 50, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ delay: index * 0.2, duration: 0.6 }}
-              >
-                <Card className="bg-gray-800 border-none shadow-2xl hover:scale-105 transition-transform rounded-2xl">
-                  <CardContent className="p-6 flex items-start gap-4">
-                    {milestone.completed ? (
-                      <CheckCircle className={`h-6 w-6 text-${tapri.primaryColor}-400 animate-pulse`} />
-                    ) : (
-                      <Circle className="h-6 w-6 text-gray-600" />
-                    )}
-                    <div>
-                      <h4 className="font-semibold text-gray-300 text-lg">{milestone.title}</h4>
-                      <p className="text-sm text-gray-400">{milestone.description}</p>
-                      {milestone.dueDate && (
-                        <p className="text-xs text-gray-500 mt-1">Dropping: {milestone.dueDate}</p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
-
-      <motion.section
-        id="gallery"
-        className="w-full py-16 bg-gray-900/70"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="container px-4 md:px-6">
-          <h2 className={`text-4xl md:text-5xl font-bold text-center mb-12 text-${tapri.primaryColor}-400 animate-pulse`}>
-            Our Aesthetic 📸
-          </h2>
-          <Carousel className="w-full max-w-5xl mx-auto">
-            <CarouselContent>
-              {Array.from({ length: 4 }).map((_, index) => (
-                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                  <motion.div
-                    className="relative h-64 w-full rounded-2xl overflow-hidden shadow-xl"
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Image src={tapri.bannerImage} alt={`Vibe ${index + 1}`} fill className="object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                  </motion.div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className={`bg-${tapri.primaryColor}-600 hover:bg-${tapri.primaryColor}-700 rounded-full`} />
-            <CarouselNext className={`bg-${tapri.primaryColor}-600 hover:bg-${tapri.primaryColor}-700 rounded-full`} />
-          </Carousel>
-        </div>
-      </motion.section>
-
-      <motion.section
-        id="testimonials"
-        className="w-full py-16"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="container px-4 md:px-6">
-          <h2 className={`text-4xl md:text-5xl font-bold text-center mb-12 text-${tapri.primaryColor}-400 animate-pulse`}>
-            The Hype is Real 🗣️
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ y: 50, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ delay: index * 0.2, duration: 0.6 }}
-              >
-                <Card className="bg-gray-800 border-none shadow-2xl hover:scale-105 transition-transform rounded-2xl">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-gray-700">
-                        <Image src={testimonial.image} alt={testimonial.name} fill className="object-cover" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-300">{testimonial.name}</h4>
-                        <p className="text-sm text-gray-500">{testimonial.role}</p>
-                      </div>
-                    </div>
-                    <p className="text-gray-400 italic">"{testimonial.quote}"</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
-
-      <motion.section
-        id="contact"
-        className="w-full py-16 bg-gray-900/70"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="container px-4 md:px-6">
-          <h2 className={`text-4xl md:text-5xl font-bold text-center mb-12 text-${tapri.primaryColor}-400 animate-pulse`}>
-            Slide into Our DMs 📩
-          </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <motion.div
-              initial={{ x: -50, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
-            >
-              <h3 className="text-2xl font-semibold mb-6">Connect with Us</h3>
-              <p className="text-gray-400 flex items-center gap-2 mb-4">
-                <Mail className="h-5 w-5" />
-                <a href="mailto:contact@go-tapri.com">contact@go-tapri.com</a>
-              </p>
-              <p className="text-gray-400 flex items-center gap-2 mb-4">
-                <Globe className="h-5 w-5" />
-                <a href="https://go-tapri.vercel.app" target="_blank">go-tapri.vercel.app</a>
-              </p>
-              <p className="text-gray-400 flex items-center gap-2 mb-4">
-                <MapPin className="h-5 w-5" />
-                Remote, Worldwide 🌍
-              </p>
-              <div className="flex gap-4">
-                <Button
-                  variant="outline"
-                  className={`border-${tapri.primaryColor}-500 text-${tapri.primaryColor}-400 hover:bg-${tapri.primaryColor}-500/20 rounded-full`}
-                >
-                  Twitter 🐦
-                </Button>
-                <Button
-                  variant="outline"
-                  className={`border-${tapri.primaryColor}-500 text-${tapri.primaryColor}-400 hover:bg-${tapri.primaryColor}-500/20 rounded-full`}
-                >
-                  Discord 🎮
-                </Button>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
-            >
-              <Card className="bg-gray-800 border-none shadow-2xl rounded-2xl">
-                <CardHeader>
-                  <CardTitle className={`text-xl font-semibold text-${tapri.primaryColor}-400`}>Drop a Message</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-400 mb-4">Got ideas or wanna collab? Let’s make it pop! 💥</p>
-                  <a href="mailto:contact@go-tapri.com">
-                    <Button
-                      className={`w-full bg-${tapri.primaryColor}-600 hover:bg-${tapri.primaryColor}-700 rounded-full transform hover:scale-105 transition-transform`}
-                    >
-                      Send the Tea ☕
-                    </Button>
-                  </a>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        </div>
-      </motion.section>
-
-      <footer className="w-full py-12 bg-gray-900">
-        <div className="container px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="relative h-12 w-12 mb-4 rounded-full overflow-hidden">
-                <Image src={tapri.logoImage} alt={`${tapri.title} logo`} fill className="object-cover" />
-              </div>
-              <h3 className={`text-lg font-semibold text-${tapri.primaryColor}-400`}>{tapri.title}</h3>
-              <p className="text-sm text-gray-400 mt-2">{tapri.description}</p>
-            </div>
-            <div>
-              <h3 className={`text-lg font-semibold text-${tapri.primaryColor}-400`}>Quick Links</h3>
-              <div className="flex flex-col gap-2 mt-2">
-                <Link href="#overview" className={`text-sm text-gray-400 hover:text-${tapri.primaryColor}-400`}>Overview</Link>
-                <Link href="#team" className={`text-sm text-gray-400 hover:text-${tapri.primaryColor}-400`}>Team</Link>
-                <Link href="#roles" className={`text-sm text-gray-400 hover:text-${tapri.primaryColor}-400`}>Roles</Link>
-                <Link href="#contact" className={`text-sm text-gray-400 hover:text-${tapri.primaryColor}-400`}>Contact</Link>
-              </div>
-            </div>
-            <div>
-              <h3 className={`text-lg font-semibold text-${tapri.primaryColor}-400`}>Vibes</h3>
-              <div className="flex flex-col gap-2 mt-2">
-                <a href="#contact" className={`text-sm text-gray-400 hover:text-${tapri.primaryColor}-400`}>Join the Hype</a>
-                <a href="#gallery" className={`text-sm text-gray-400 hover:text-${tapri.primaryColor}-400`}>Check the Aesthetic</a>
-              </div>
-            </div>
-            <div>
-              <h3 className={`text-lg font-semibold text-${tapri.primaryColor}-400`}>Deets</h3>
-              <p className="text-sm text-gray-400 flex items-center gap-2 mt-2">
-                <Star className="h-4 w-4" />
-                Launched June 2025
-              </p>
-              <p className="text-sm text-gray-400 flex items-center gap-2 mt-2">
-                <Zap className="h-4 w-4" />
-                Building the Future
-              </p>
-            </div>
-          </div>
-          <div className="mt-8 text-center text-sm text-gray-500">
-            © 2025 {tapri.title}. All rights reserved. Made with 💖 by the Tapri Crew.
-          </div>
-        </div>
-      </footer>
-    </div>
-  )
 }
 
-function convertDatabaseTapri(dbTapri: any): TapriData {
-  const category = dbTapri.category || 'startup'
-  const getCategoryColor = (cat: string): string => {
-    switch (cat.toLowerCase()) {
-      case 'startup': return 'pink'
-      case 'technology': return 'blue'
-      case 'community': return 'green'
-      case 'non profit/ngo': return 'purple'
-      default: return 'gray'
+export default async function TapriDetailPage({ params }: TapriDetailPageProps) {
+  const isConfigured = isSupabaseConfigured()
+  let tapri = null
+
+  // Try to get from database first
+  if (isConfigured) {
+    try {
+      const { data } = await TapriService.getTapriById(params.id)
+      if (data) {
+        tapri = convertDatabaseTapri(data)
+      }
+    } catch (error) {
+      console.error("Error fetching tapri from database:", error)
     }
   }
 
-  return {
-    id: dbTapri.id || '',
-    siteName: dbTapri.site_name || 'untitled-project',
-    title: dbTapri.title || 'Untitled Project',
-    description: dbTapri.description || 'A startup that’s about to blow up. Join the vibe! 😎',
-    category: category,
-    bannerImage: dbTapri.banner_image || '/placeholder.svg?height=700&width=1200',
-    logoImage: dbTapri.logo_image || '/placeholder.svg?height=120&width=120',
-    status: dbTapri.status || 'recruiting',
-    primaryColor: getCategoryColor(category),
+  // Fallback to mock data
+  if (!tapri) {
+    tapri = getTapriById(params.id)
   }
+
+  // If still no tapri found, show not found
+  if (!tapri) {
+    notFound()
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "bg-green-100 text-green-800 hover:bg-green-200"
+      case "recruiting":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-200"
+      case "launching":
+        return "bg-purple-100 text-purple-800 hover:bg-purple-200"
+      case "completed":
+        return "bg-gray-100 text-gray-800 hover:bg-gray-200"
+      default:
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+    }
+  }
+
+  const completedMilestones = tapri.milestones.filter((m) => m.completed).length
+  const totalMilestones = tapri.milestones.length
+  const progressPercentage = (completedMilestones / totalMilestones) * 100
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {/* Hero Banner */}
+      <section className="relative w-full h-[500px] overflow-hidden">
+        <Image src={tapri.bannerImage || "/placeholder.svg"} alt={tapri.title} fill className="object-cover" priority />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+        <div className="absolute inset-0 flex items-end">
+          <div className="container px-4 md:px-6 pb-12">
+            <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
+              <div className="relative">
+                <Image
+                  src={tapri.logoImage || "/placeholder.svg"}
+                  alt={`${tapri.title} logo`}
+                  width={120}
+                  height={120}
+                  className="rounded-xl border-4 border-white shadow-lg"
+                />
+              </div>
+              <div className="text-white flex-1">
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Badge className={getStatusColor(tapri.status)}>
+                    {tapri.status === "recruiting"
+                      ? "Recruiting Now"
+                      : tapri.status === "active"
+                        ? "Active Project"
+                        : tapri.status === "launching"
+                          ? "Launching Soon"
+                          : "Completed"}
+                  </Badge>
+                  <Badge variant="outline" className="text-white border-white bg-white/10">
+                    {tapri.category}
+                  </Badge>
+                  <Badge variant="outline" className="text-white border-white bg-white/10">
+                    {tapri.stage}
+                  </Badge>
+                </div>
+                <h1 className="text-4xl md:text-5xl font-bold mb-4">{tapri.title}</h1>
+                <p className="text-xl md:text-2xl text-gray-200 mb-4">{tapri.tagline}</p>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    <span>{tapri.teamSize} team members</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Award className="h-4 w-4" />
+                    <span>{tapri.openPositions} open positions</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>{tapri.location}</span>
+                  </div>
+                  {tapri.metrics.funding && (
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      <span>{tapri.metrics.funding} raised</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Stats */}
+      <section className="w-full py-8 bg-gradient-to-r from-yellow-50 to-red-50">
+        <div className="container px-4 md:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-yellow-600">{tapri.views.toLocaleString()}</div>
+              <div className="text-sm text-gray-600">Profile Views</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600">{tapri.applications}</div>
+              <div className="text-sm text-gray-600">Applications</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600">{tapri.teamSize}</div>
+              <div className="text-sm text-gray-600">Team Members</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600">{tapri.openPositions}</div>
+              <div className="text-sm text-gray-600">Open Positions</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Content */}
+      <section className="w-full py-12">
+        <div className="container px-4 md:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2">
+              <Tabs defaultValue="overview" className="w-full">
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="team">Team</TabsTrigger>
+                  <TabsTrigger value="positions">Positions</TabsTrigger>
+                  <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
+                  <TabsTrigger value="apply">Apply</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="overview" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Target className="h-5 w-5" />
+                        About This Tapri
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div>
+                        <h4 className="font-semibold mb-2">Project Description</h4>
+                        <p className="text-gray-600">{tapri.fullDescription}</p>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="font-semibold mb-2 flex items-center gap-2">
+                            <Target className="h-4 w-4" />
+                            Our Mission
+                          </h4>
+                          <p className="text-sm text-gray-600">{tapri.mission}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-2 flex items-center gap-2">
+                            <Zap className="h-4 w-4" />
+                            Our Vision
+                          </h4>
+                          <p className="text-sm text-gray-600">{tapri.vision}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="font-semibold mb-2">Problem Statement</h4>
+                          <p className="text-sm text-gray-600">{tapri.problemStatement}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-2">Our Solution</h4>
+                          <p className="text-sm text-gray-600">{tapri.solution}</p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold mb-2">Target Audience</h4>
+                        <p className="text-sm text-gray-600">{tapri.targetAudience}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Briefcase className="h-5 w-5" />
+                        What We're Working On
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-3">
+                        {tapri.currentTasks.map((task, index) => (
+                          <li key={index} className="flex items-start gap-3">
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0" />
+                            <span className="text-sm">{task}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+
+                  {/* Metrics */}
+                  {Object.keys(tapri.metrics).length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5" />
+                          Key Metrics
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {tapri.metrics.funding && (
+                            <div className="text-center p-4 bg-green-50 rounded-lg">
+                              <div className="text-2xl font-bold text-green-600">{tapri.metrics.funding}</div>
+                              <div className="text-xs text-gray-600">Funding</div>
+                            </div>
+                          )}
+                          {tapri.metrics.users && (
+                            <div className="text-center p-4 bg-blue-50 rounded-lg">
+                              <div className="text-2xl font-bold text-blue-600">{tapri.metrics.users}</div>
+                              <div className="text-xs text-gray-600">Users</div>
+                            </div>
+                          )}
+                          {tapri.metrics.revenue && (
+                            <div className="text-center p-4 bg-purple-50 rounded-lg">
+                              <div className="text-2xl font-bold text-purple-600">{tapri.metrics.revenue}</div>
+                              <div className="text-xs text-gray-600">Revenue</div>
+                            </div>
+                          )}
+                          {tapri.metrics.growth && (
+                            <div className="text-center p-4 bg-orange-50 rounded-lg">
+                              <div className="text-2xl font-bold text-orange-600">{tapri.metrics.growth}</div>
+                              <div className="text-xs text-gray-600">Growth</div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="team" className="space-y-6">
+                  {/* Team Leader Spotlight */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Team Leader</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col md:flex-row items-start gap-6">
+                        <div className="relative">
+                          <Image
+                            src={tapri.teamLeader.image || "/placeholder.svg"}
+                            alt={tapri.teamLeader.name}
+                            width={120}
+                            height={120}
+                            className="rounded-lg object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold">{tapri.teamLeader.name}</h3>
+                          <p className="text-yellow-600 mb-3 font-medium">{tapri.teamLeader.role}</p>
+                          <p className="text-gray-600 mb-4">{tapri.teamLeader.bio}</p>
+
+                          <div className="mb-4">
+                            <h4 className="font-semibold mb-2">Key Achievements</h4>
+                            <ul className="space-y-1">
+                              {tapri.teamLeader.achievements.map((achievement, index) => (
+                                <li key={index} className="flex items-start gap-2">
+                                  <Star className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                                  <span className="text-sm">{achievement}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div className="flex gap-2">
+                            {tapri.teamLeader.linkedin && (
+                              <Button variant="outline" size="sm" asChild>
+                                <Link href={tapri.teamLeader.linkedin} target="_blank">
+                                  <ExternalLink className="mr-2 h-4 w-4" />
+                                  LinkedIn
+                                </Link>
+                              </Button>
+                            )}
+                            {tapri.teamLeader.twitter && (
+                              <Button variant="outline" size="sm" asChild>
+                                <Link href={tapri.teamLeader.twitter} target="_blank">
+                                  <ExternalLink className="mr-2 h-4 w-4" />
+                                  Twitter
+                                </Link>
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Team Members */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Core Team Members</CardTitle>
+                      <CardDescription>Meet the passionate individuals building this tapri</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid md:grid-cols-2 gap-6">
+                        {tapri.teamMembers
+                          .filter((member) => member.isCore)
+                          .map((member, index) => (
+                            <div
+                              key={index}
+                              className="flex items-start gap-4 p-4 rounded-lg border bg-gradient-to-br from-gray-50 to-white"
+                            >
+                              <Image
+                                src={member.image || "/placeholder.svg"}
+                                alt={member.name}
+                                width={60}
+                                height={60}
+                                className="rounded-lg object-cover"
+                              />
+                              <div className="flex-1">
+                                <h4 className="font-semibold">{member.name}</h4>
+                                <p className="text-sm text-yellow-600 mb-2">{member.role}</p>
+                                <p className="text-xs text-gray-600 mb-2">{member.bio}</p>
+                                {member.linkedin && (
+                                  <Button variant="ghost" size="sm" asChild className="p-0 h-auto">
+                                    <Link href={member.linkedin} target="_blank" className="text-xs">
+                                      <ExternalLink className="mr-1 h-3 w-3" />
+                                      LinkedIn
+                                    </Link>
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="positions" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        Open Positions ({tapri.openPositions})
+                      </CardTitle>
+                      <CardDescription>Join our team and help build the future</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        {tapri.openRoles.map((role, index) => (
+                          <div
+                            key={index}
+                            className="p-6 rounded-lg border bg-gradient-to-br from-yellow-50 via-white to-red-50"
+                          >
+                            <div className="flex flex-col md:flex-row justify-between items-start mb-4 gap-4">
+                              <div className="flex-1">
+                                <h3 className="text-lg font-semibold">{role.title}</h3>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  <Badge variant="outline">{role.type}</Badge>
+                                  <Badge variant="outline">{role.experienceLevel}</Badge>
+                                  <Badge variant="outline">{role.timeCommitment}</Badge>
+                                  {role.compensation && (
+                                    <Badge className="bg-green-100 text-green-800">{role.compensation}</Badge>
+                                  )}
+                                </div>
+                              </div>
+                              <Button className="bg-yellow-600 hover:bg-yellow-700 text-white" asChild>
+                                <Link href={`#apply`}>Apply Now</Link>
+                              </Button>
+                            </div>
+
+                            <p className="text-gray-600 mb-4">{role.description}</p>
+
+                            <div className="grid md:grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <h4 className="font-medium mb-2">Responsibilities</h4>
+                                <ul className="text-sm space-y-1">
+                                  {role.responsibilities.map((resp, idx) => (
+                                    <li key={idx} className="flex items-start gap-2">
+                                      <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full mt-2 flex-shrink-0" />
+                                      <span>{resp}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div>
+                                <h4 className="font-medium mb-2">Requirements</h4>
+                                <ul className="text-sm space-y-1">
+                                  {role.requirements.map((req, idx) => (
+                                    <li key={idx} className="flex items-start gap-2">
+                                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 flex-shrink-0" />
+                                      <span>{req}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h4 className="font-medium mb-2">Required Skills</h4>
+                              <div className="flex flex-wrap gap-2">
+                                {role.skills.map((skill, idx) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    {skill}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-8 p-6 rounded-lg bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200">
+                        <h4 className="font-semibold mb-3 flex items-center gap-2">
+                          <GraduationCap className="h-5 w-5" />
+                          General Eligibility & Benefits
+                        </h4>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <h5 className="font-medium mb-2">Eligibility Criteria</h5>
+                            <ul className="space-y-2">
+                              {tapri.eligibilityCriteria.map((criteria, index) => (
+                                <li key={index} className="flex items-start gap-2">
+                                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                  <span className="text-sm">{criteria}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div>
+                            <h5 className="font-medium mb-2">What You'll Get</h5>
+                            <ul className="space-y-2">
+                              {tapri.benefits.map((benefit, index) => (
+                                <li key={index} className="flex items-start gap-2">
+                                  <Star className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                                  <span className="text-sm">{benefit}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="roadmap" className="space-y-6">
+                  {/* Progress Overview */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5" />
+                        Project Progress
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="mb-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium">Overall Progress</span>
+                          <span className="text-sm text-gray-600">
+                            {completedMilestones}/{totalMilestones} milestones
+                          </span>
+                        </div>
+                        <Progress value={progressPercentage} className="h-2" />
+                      </div>
+
+                      <div className="space-y-3">
+                        {tapri.milestones.map((milestone, index) => (
+                          <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
+                            {milestone.completed ? (
+                              <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                            ) : (
+                              <Circle className="h-5 w-5 text-gray-400 mt-0.5" />
+                            )}
+                            <div className="flex-1">
+                              <h4 className={`font-medium ${milestone.completed ? "text-green-700" : "text-gray-700"}`}>
+                                {milestone.title}
+                              </h4>
+                              <p className="text-sm text-gray-600">{milestone.description}</p>
+                              {milestone.dueDate && !milestone.completed && (
+                                <p className="text-xs text-orange-600 mt-1">
+                                  Due: {new Date(milestone.dueDate).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Future Plans */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Zap className="h-5 w-5" />
+                        Future Plans
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {tapri.futurePlans.map((plan, index) => (
+                          <div
+                            key={index}
+                            className="flex items-start gap-4 p-4 rounded-lg border bg-gradient-to-br from-purple-50 to-blue-50"
+                          >
+                            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                              <span className="text-sm font-semibold text-purple-600">{index + 1}</span>
+                            </div>
+                            <div>
+                              <p className="font-medium">{plan}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="apply" className="space-y-6" id="apply">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Mail className="h-5 w-5" />
+                        Ready to Join Our Team?
+                      </CardTitle>
+                      <CardDescription>
+                        Follow our application process to become part of this exciting project
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div>
+                        <h4 className="font-semibold mb-3">Application Process</h4>
+                        <div className="space-y-3">
+                          {tapri.applicationProcess.map((step, index) => (
+                            <div key={index} className="flex items-start gap-3">
+                              <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span className="text-xs font-semibold text-yellow-600">{index + 1}</span>
+                              </div>
+                              <span className="text-sm">{step}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold mb-3">What You'll Learn</h4>
+                        <ul className="space-y-2">
+                          {tapri.learningOutcomes.map((outcome, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <GraduationCap className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm">{outcome}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <Button asChild className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white">
+                          <Link href={tapri.applicationFormUrl} target="_blank">
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            Apply Now
+                          </Link>
+                        </Button>
+                        <Button variant="outline" className="flex-1" asChild>
+                          <Link href={`mailto:${tapri.contactEmail}`}>
+                            <Mail className="mr-2 h-4 w-4" />
+                            Contact Team
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Quick Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button className="w-full bg-yellow-600 hover:bg-yellow-700 text-white" asChild>
+                    <Link href={tapri.applicationFormUrl} target="_blank">
+                      <Users className="mr-2 h-4 w-4" />
+                      Join This Tapri
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href={`mailto:${tapri.contactEmail}`}>
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Contact Team
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href={`/schedule/${tapri.teamLeader.name.toLowerCase().replace(/\s+/g, "-")}`}>
+                      <Video className="mr-2 h-4 w-4" />
+                      Schedule Meeting
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Project Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Project Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">{tapri.location}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">{tapri.teamSize} team members</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">Started {new Date(tapri.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">{tapri.stage}</span>
+                  </div>
+                  {tapri.website && (
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-gray-500" />
+                      <Link href={tapri.website} target="_blank" className="text-sm text-blue-600 hover:underline">
+                        Visit Website
+                      </Link>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Contact Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Get In Touch</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-sm font-medium">Project Lead</div>
+                      <div className="text-sm text-gray-600">{tapri.teamLeader.name}</div>
+                      <div className="text-sm text-gray-600">{tapri.teamLeader.role}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">Contact Email</div>
+                      <Link href={`mailto:${tapri.contactEmail}`} className="text-sm text-blue-600 hover:underline">
+                        {tapri.contactEmail}
+                      </Link>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
 }

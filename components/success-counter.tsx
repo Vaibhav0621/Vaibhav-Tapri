@@ -11,10 +11,10 @@ export default function SuccessCounter() {
   })
 
   const finalCounts = {
-    helpedPeople: 128,
-    activeTeams: 13,
-    successfulStartups: 4,
-    mentorsConnected: 37,
+    helpedPeople: 12847,
+    activeTeams: 342,
+    successfulStartups: 89,
+    mentorsConnected: 567,
   }
 
   useEffect(() => {

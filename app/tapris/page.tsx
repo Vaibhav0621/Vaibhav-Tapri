@@ -5,14 +5,12 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, MapPin, Users, Eye, TrendingUp, Award, Clock, Filter, AlertCircle } from "lucide-react"
+import { Search, MapPin, Users, Eye, TrendingUp, Award, Clock, Filter } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { SetupBanner } from "@/components/setup-banner"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { TapriService } from "@/lib/services/tapri-service"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import  staticProjects  from "./[id]/page"
 
 type Tapri = {
   id: string
@@ -36,67 +34,103 @@ type Tapri = {
   }
 }
 
-// Helper to map static TapriData to Tapri type used here
-function mapStaticToTapri(staticTapri: any, id: any) {
-  return {
-    id: id,
-    title: staticTapri.title,
-    tagline: staticTapri.tagline,
-    description: staticTapri.description,
-    category: staticTapri.category,
-    stage: staticTapri.stage,
-    location: staticTapri.location,
-    team_size: staticTapri.teamSize,
-    open_positions: staticTapri.openPositions,
-    banner_url: staticTapri.bannerImage,
-    status: staticTapri.status === "recruiting" ? "approved" : staticTapri.status,
-    views: staticTapri.views,
-    applications: staticTapri.applications,
-    created_at: staticTapri.createdAt,
-    website: staticTapri.website,
-    profiles: staticTapri.teamLeader
-      ? {
-          full_name: staticTapri.teamLeader.name,
-          avatar_url: staticTapri.teamLeader.image,
-        }
-      : undefined,
-  }
-}
-
 export default function TaprisPage() {
   const isConfigured = isSupabaseConfigured()
   const [tapris, setTapris] = useState<Tapri[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedStage, setSelectedStage] = useState("all")
   const [selectedLocation, setSelectedLocation] = useState("all")
 
+  // Mock data for when database isn't configured
+  const mockTapris: Tapri[] = [
+    {
+      id: "1",
+      title: "AI-Powered Learning Platform",
+      tagline: "Revolutionizing education with AI",
+      description: "Building an intelligent learning platform that adapts to each student's learning style and pace.",
+      category: "ai-ml",
+      stage: "MVP Development",
+      location: "Remote",
+      team_size: 5,
+      open_positions: 3,
+      banner_url: "/placeholder.svg?height=200&width=400",
+      status: "approved",
+      views: 1250,
+      applications: 23,
+      created_at: "2024-01-15",
+      website: "https://ai-learning.com",
+      profiles: {
+        full_name: "Sarah Chen",
+        avatar_url: "/placeholder.svg?height=40&width=40",
+      },
+    },
+    {
+      id: "2",
+      title: "Sustainable E-commerce Platform",
+      tagline: "Green shopping for a better tomorrow",
+      description: "Creating a marketplace that connects eco-conscious consumers with sustainable brands.",
+      category: "ecommerce",
+      stage: "Beta Testing",
+      location: "San Francisco",
+      team_size: 8,
+      open_positions: 2,
+      banner_url: "/placeholder.svg?height=200&width=400",
+      status: "approved",
+      views: 890,
+      applications: 15,
+      created_at: "2024-02-01",
+      website: "https://green-marketplace.com",
+      profiles: {
+        full_name: "Alex Rodriguez",
+        avatar_url: "/placeholder.svg?height=40&width=40",
+      },
+    },
+    {
+      id: "3",
+      title: "Blockchain Healthcare Records",
+      tagline: "Secure, decentralized health data",
+      description: "Developing a blockchain-based system for secure and interoperable healthcare records.",
+      category: "blockchain",
+      stage: "Prototype",
+      location: "Remote",
+      team_size: 6,
+      open_positions: 4,
+      banner_url: "/placeholder.svg?height=200&width=400",
+      status: "approved",
+      views: 2100,
+      applications: 31,
+      created_at: "2024-01-20",
+      website: null,
+      profiles: {
+        full_name: "Dr. Michael Kim",
+        avatar_url: "/placeholder.svg?height=40&width=40",
+      },
+    },
+  ]
+
   useEffect(() => {
     async function fetchTapris() {
+      setLoading(true)
+
       if (!isConfigured) {
-        setError("Database not configured. Please set up your Supabase connection.")
-        setLoading(false)
+        // Simulate quick loading for mock data
+        setTimeout(() => {
+          setTapris(mockTapris)
+          setLoading(false)
+        }, 300)
         return
       }
 
-      setLoading(true)
-      setError(null)
-
       try {
+        // Fetch only essential data first, with pagination
         const { data } = await TapriService.getApprovedTapris(1, 12, selectedCategory, selectedStage)
-        // Map static tapris to Tapri type
-        const staticTapris = Object.entries(staticProjects).map(([id, tapri]) => mapStaticToTapri(tapri, id))
-        // Remove any db tapri with same id as static
-        const filteredDbTapris = (data || []).filter(
-          (t) => !staticTapris.some((s) => s.id && t.id && s.id.toLowerCase() === t.id.toLowerCase())
-        )
-        setTapris([...staticTapris, ...filteredDbTapris])
-      } catch (error: any) {
+        setTapris(data || [])
+      } catch (error) {
         console.error("Error fetching tapris:", error)
-        setError(error.message || "Failed to load tapris")
-        setTapris([])
+        // Fallback to mock data on error
+        setTapris(mockTapris)
       } finally {
         setLoading(false)
       }
@@ -156,20 +190,6 @@ export default function TaprisPage() {
     return `https://web3forms.com/forms/f3993f73-3c04-4f7b-ad60-630c82bb01cc?tapri_id=${tapri.id}&tapri_title=${encodeURIComponent(tapri.title)}&tapri_category=${encodeURIComponent(tapri.category)}`
   }
 
-  if (!isConfigured) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <SetupBanner />
-        <Alert className="mt-8">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Database not configured. Please set up your Supabase connection to view and manage tapris.
-          </AlertDescription>
-        </Alert>
-      </div>
-    )
-  }
-
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -193,21 +213,6 @@ export default function TaprisPage() {
               </div>
             </div>
           ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <SetupBanner />
-        <Alert className="mt-8" variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-        <div className="text-center mt-8">
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
         </div>
       </div>
     )
@@ -354,7 +359,7 @@ export default function TaprisPage() {
         {filteredTapris.map((tapri) => (
           <Card
             key={tapri.id}
-            className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-yellow-300 bg-card shadow-md"
+            className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-yellow-300 bg-gradient-to-br from-white to-gray-50"
           >
             <Link href={`/tapris/${tapri.id}`} className="block">
               <div className="aspect-video relative overflow-hidden">
@@ -393,11 +398,11 @@ export default function TaprisPage() {
             <CardHeader className="pb-3">
               <Link href={`/tapris/${tapri.id}`} className="block">
                 <div className="flex justify-between items-start mb-2">
-                  <CardTitle className="text-xl group-hover:text-yellow-600 transition-colors line-clamp-1 text-card-foreground">
+                  <CardTitle className="text-xl group-hover:text-yellow-600 transition-colors line-clamp-1">
                     {tapri.title}
                   </CardTitle>
                 </div>
-                <CardDescription className="text-base font-medium text-muted-foreground line-clamp-1">
+                <CardDescription className="text-base font-medium text-gray-700 line-clamp-1">
                   {tapri.tagline || "No tagline provided"}
                 </CardDescription>
               </Link>
@@ -405,7 +410,7 @@ export default function TaprisPage() {
 
             <CardContent className="pt-0">
               <Link href={`/tapris/${tapri.id}`} className="block mb-4">
-                <p className="text-sm text-muted-foreground line-clamp-3">{tapri.description}</p>
+                <p className="text-sm text-gray-600 line-clamp-3">{tapri.description}</p>
               </Link>
 
               {/* Key Metrics */}
@@ -430,7 +435,7 @@ export default function TaprisPage() {
 
               {/* Creator Info */}
               {tapri.profiles && (
-                <div className="mb-4 p-3 bg-muted rounded-lg">
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Image
                       src={tapri.profiles.avatar_url || "/placeholder.svg?height=32&width=32"}
@@ -440,8 +445,8 @@ export default function TaprisPage() {
                       className="rounded-full"
                     />
                     <div className="text-sm">
-                      <div className="font-medium text-foreground">{tapri.profiles.full_name || "Anonymous"}</div>
-                      <div className="text-muted-foreground">Project Creator</div>
+                      <div className="font-medium">{tapri.profiles.full_name || "Anonymous"}</div>
+                      <div className="text-gray-500">Project Creator</div>
                     </div>
                   </div>
                 </div>
@@ -486,6 +491,14 @@ export default function TaprisPage() {
           <Link href="/create-project">Create Your Own Tapri</Link>
         </Button>
       </div>
+
+      {!isConfigured && (
+        <div className="text-center mt-12 p-8 bg-yellow-50 rounded-lg border-2 border-yellow-200">
+          <p className="text-gray-600">
+            This is demo data. Connect your Supabase database to see real projects and enable full functionality.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Users, Calendar, Star, TrendingUp, CheckCircle, FileText, ArrowRight, ExternalLink, Clock } from "lucide-react"
+import { Plus, Users, Calendar, Star, TrendingUp, CheckCircle, FileText, ArrowRight, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { getFormSubmissions, getMockFormSubmissions, convertFormSubmissionToTapri } from "@/app/actions/tapri-actions"
@@ -377,27 +377,26 @@ export default function MyTaprisPage() {
                 </div>
               ) : (
                 formSubmissions.map((submission) => (
-                  <Card key={submission.id} className="mb-4">
+                  <Card
+                    key={submission.id}
+                    className="group hover:shadow-xl transition-all duration-300 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
+                  >
                     <CardHeader>
                       <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle>{submission.title}</CardTitle>
-                          <CardDescription>
-                            Submitted on {new Date(submission.created_at).toLocaleDateString()}
-                          </CardDescription>
-                        </div>
+                        <CardTitle className="text-lg line-clamp-1">{submission.title}</CardTitle>
                         <Badge
                           className={
-                            submission.status === "approved"
-                              ? "bg-green-100 text-green-800 hover:bg-green-200"
-                              : submission.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
-                              : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                            submission.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : submission.status === "converted"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
                           }
                         >
-                          {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
+                          {submission.status}
                         </Badge>
                       </div>
+                      <CardDescription className="line-clamp-2">{submission.description}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
@@ -415,7 +414,7 @@ export default function MyTaprisPage() {
                           <span className="text-gray-500">Submitted:</span>
                           <div className="font-medium">{new Date(submission.created_at).toLocaleDateString()}</div>
                         </div>
-                        {submission.status === "approved" && (
+                        {submission.status === "pending" && (
                           <Button
                             onClick={() => handleConvertToTapri(submission.id)}
                             disabled={converting === submission.id}
@@ -434,12 +433,15 @@ export default function MyTaprisPage() {
                             )}
                           </Button>
                         )}
-                        {submission.status === "pending" && (
-                          <div className="text-sm text-yellow-600 bg-yellow-50 p-3 rounded-md">
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4" />
-                              Waiting for admin approval
-                            </div>
+                        {submission.status === "converted" && (
+                          <div className="space-y-2">
+                            <Button asChild className="w-full" variant="outline">
+                              <Link href="/tapris">
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                View in Browse Tapris
+                              </Link>
+                            </Button>
+                            <p className="text-xs text-green-600 text-center">✅ Successfully converted to Tapri</p>
                           </div>
                         )}
                       </div>

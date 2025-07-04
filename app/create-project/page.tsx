@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -43,59 +43,68 @@ export default function CreateProjectPage() {
     setIsSubmitting(true)
 
     try {
-      // Prepare Web3Forms data
+      // Create FormData for Web3Forms
       const formDataToSend = new FormData()
+
+      // Add Web3Forms required fields
       formDataToSend.append("access_key", "f3993f73-3c04-4f7b-ad60-630c82bb01cc")
       formDataToSend.append("subject", `New Tapri Project: ${formData.title}`)
       formDataToSend.append("from_name", "Tapri Platform")
+
+      // Add all form fields
       Object.entries(formData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formDataToSend.append(key, String(value))
-        }
+        formDataToSend.append(key, value)
       })
 
-      // Submit to Web3Forms
+      console.log("Submitting form data:", Object.fromEntries(formDataToSend))
+
       const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
         body: formDataToSend,
       })
 
+      console.log("Response status:", response.status)
+
       if (!response.ok) {
-        throw new Error(`Web3Forms error: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const data = await response.json()
-      if (!data.success) {
-        throw new Error(data.message || "Failed to submit to Web3Forms")
+      console.log("Response data:", data)
+
+      if (data.success) {
+        toast({
+          title: "Project Submitted Successfully! 🎉",
+          description: "Your Tapri project has been submitted for review. You'll hear back from us soon!",
+        })
+
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          title: "",
+          tagline: "",
+          description: "",
+          category: "",
+          stage: "",
+          team_size: "1",
+          open_positions: "3",
+          location: "Remote",
+          mission: "",
+          vision: "",
+          required_skills: "",
+          website: "",
+          commitment_level: "part-time",
+        })
+
+        // Redirect to my-tapris page after 2 seconds
+        setTimeout(() => {
+          router.push("/my-tapris")
+        }, 2000)
+      } else {
+        throw new Error(data.message || "Failed to submit project")
       }
-
-      // Success
-      toast({
-        title: "Project Submitted Successfully! 🎉",
-        description: "Your Tapri project has been submitted for review. You'll hear back from us soon!",
-      })
-
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        title: "",
-        tagline: "",
-        description: "",
-        category: "",
-        stage: "",
-        team_size: "1",
-        open_positions: "3",
-        location: "Remote",
-        mission: "",
-        vision: "",
-        required_skills: "",
-        website: "",
-        commitment_level: "part-time",
-      })
-
-      setTimeout(() => router.push("/my-tapris"), 2000)
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error submitting project:", error)
       toast({
         title: "Submission Failed",
@@ -205,7 +214,7 @@ export default function CreateProjectPage() {
                     <Select
                       name="category"
                       value={formData.category}
-                      onValueChange={(value) => handleInputChange("level", value)}
+                      onValueChange={(value) => handleInputChange("category", value)}
                       required
                     >
                       <SelectTrigger>
@@ -370,16 +379,19 @@ export default function CreateProjectPage() {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold"
                   disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-yellow-600 to-red-500 hover:from-yellow-700 hover:to-red-600 text-white py-3 text-lg"
                 >
                   {isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
-                      Submitting...
-                    </div>
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Submitting Your Tapri...
+                    </>
                   ) : (
-                    "Submit Project"
+                    <>
+                      <Rocket className="mr-2 h-5 w-5" />
+                      Submit Your Tapri
+                    </>
                   )}
                 </Button>
 

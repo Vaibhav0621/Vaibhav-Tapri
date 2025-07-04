@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Search,
   Plus,
@@ -20,13 +19,10 @@ import {
   FileText,
   Mail,
   Settings,
-  AlertCircle,
 } from "lucide-react"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { AnalyticsService } from "@/lib/services/analytics-service"
 import { TapriService } from "@/lib/services/tapri-service"
-import { DatabaseStatus } from "@/components/database-status"
-import { isSupabaseConfigured } from "@/lib/supabase"
 
 interface DashboardStats {
   totalTapris: number
@@ -43,25 +39,17 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
-  const isConfigured = isSupabaseConfigured()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [pendingTapris, setPendingTapris] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (isConfigured) {
-      loadDashboardData()
-    } else {
-      setLoading(false)
-      setError("Database not configured")
-    }
-  }, [isConfigured])
+    loadDashboardData()
+  }, [])
 
   const loadDashboardData = async () => {
     try {
-      setError(null)
       const [analyticsData, pendingData] = await Promise.all([
         AnalyticsService.getDashboardAnalytics(),
         TapriService.getPendingTapris(),
@@ -69,9 +57,8 @@ export default function AdminDashboard() {
 
       setStats(analyticsData)
       setPendingTapris(pendingData)
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error loading dashboard data:", error)
-      setError(error.message || "Failed to load dashboard data")
     } finally {
       setLoading(false)
     }
@@ -81,9 +68,8 @@ export default function AdminDashboard() {
     try {
       await TapriService.approveTapri(tapriId)
       await loadDashboardData() // Refresh data
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error approving tapri:", error)
-      setError(error.message || "Failed to approve tapri")
     }
   }
 
@@ -91,9 +77,8 @@ export default function AdminDashboard() {
     try {
       await TapriService.rejectTapri(tapriId)
       await loadDashboardData() // Refresh data
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error rejecting tapri:", error)
-      setError(error.message || "Failed to reject tapri")
     }
   }
 
@@ -106,46 +91,14 @@ export default function AdminDashboard() {
     }).format(date)
   }
 
-  if (!isConfigured) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <section className="w-full py-12 bg-black text-white">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div>
-                <h1 className="text-3xl font-bold tracking-tighter">Admin Dashboard</h1>
-                <p className="text-gray-400 mt-2">Database Configuration Required</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="w-full py-12">
-          <div className="container px-4 md:px-6">
-            <Alert variant="destructive" className="mb-8">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Database not configured. Please set up your Supabase connection to access admin features.
-              </AlertDescription>
-            </Alert>
-
-            <DatabaseStatus />
-          </div>
-        </section>
-      </div>
-    )
-  }
-
   if (loading) {
     return (
-      <ProtectedRoute requireAdmin>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
-          </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
         </div>
-      </ProtectedRoute>
+      </div>
     )
   }
 
@@ -179,18 +132,6 @@ export default function AdminDashboard() {
 
         <section className="w-full py-12">
           <div className="container px-4 md:px-6">
-            {error && (
-              <Alert variant="destructive" className="mb-8">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {/* Database Status */}
-            <div className="mb-8">
-              <DatabaseStatus />
-            </div>
-
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <Card>
@@ -221,9 +162,7 @@ export default function AdminDashboard() {
                       <Users className="h-4 w-4 text-green-600" />
                     </div>
                   </div>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    {stats?.userGrowthRate || "0%"} growth this month
-                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">{stats?.userGrowthRate} growth this month</div>
                 </CardContent>
               </Card>
 

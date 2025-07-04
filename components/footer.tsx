@@ -73,10 +73,10 @@ export default function Footer() {
               <Link href="#" className="text-gray-400 hover:text-yellow-500 transition-colors">
                 <Twitter className="h-5 w-5" />
               </Link>
-              <Link href="https://www.linkedin.com/company/106749634/admin/dashboard/" className="text-gray-400 hover:text-yellow-500 transition-colors">
+              <Link href="#" className="text-gray-400 hover:text-yellow-500 transition-colors">
                 <Linkedin className="h-5 w-5" />
               </Link>
-              <Link href="https://www.instagram.com/tapri_io/reels/" className="text-gray-400 hover:text-yellow-500 transition-colors">
+              <Link href="#" className="text-gray-400 hover:text-yellow-500 transition-colors">
                 <Instagram className="h-5 w-5" />
               </Link>
             </div>
@@ -176,15 +176,15 @@ export default function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-300">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-yellow-500" />
-              <span>tapri.io.site@gmail.com</span>
+              <span>hello@tapri.com</span>
             </div>
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-yellow-500" />
-              <span>+91 7007509875</span>
+              <span>+1 (555) 123-4567</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-yellow-500" />
-              <span>Kanpur</span>
+              <span>123 Innovation Street, Tech City</span>
             </div>
           </div>
         </div>

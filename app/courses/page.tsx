@@ -33,115 +33,127 @@ import { toast } from "sonner"
 const services = [
   {
     id: 1,
-    title: "Build Cool Products",
-    description: "Need a killer product but lack the tech expertise? We design and develop innovative products from idea to launch.",
+    title: "Web Development Mastery",
+    description: "Learn modern web development with React, Next.js, and full-stack technologies",
     icon: Code,
     color: "bg-blue-500",
-    benefits: ["Custom Product Design", "Rapid Prototyping", "User-Centric Development", "Launch Support"],
-    type: "Technical [t]",
+    features: ["React & Next.js", "Full-stack Development", "Database Integration", "Deployment"],
+    duration: "12 weeks",
+    level: "Beginner to Advanced",
   },
   {
     id: 2,
-    title: "Code Like a Pro",
-    description: "Struggling with software development? Our expert engineers build robust, scalable code for your startup.",
-    icon: Code,
-    color: "bg-indigo-500",
-    benefits: ["Full-Stack Solutions", "API Integration", "Database Optimization", "DevOps Setup"],
-    type: "Technical [t]",
+    title: "Soft Skills Excellence",
+    description: "Develop essential communication, leadership, and interpersonal skills",
+    icon: Heart,
+    color: "bg-pink-500",
+    features: ["Communication Skills", "Leadership Training", "Team Collaboration", "Presentation Skills"],
+    duration: "8 weeks",
+    level: "All Levels",
   },
   {
     id: 3,
-    title: "Uncover Data Insights",
-    description: "No data team? We analyze your data to uncover trends and insights to drive smarter decisions.",
-    icon: Target,
+    title: "College Counseling",
+    description: "Expert guidance for college applications, essays, and career planning",
+    icon: BookOpen,
     color: "bg-green-500",
-    benefits: ["Data Analysis", "Custom Dashboards", "Predictive Insights", "Actionable Reports"],
-    type: "Technical [t]",
+    features: ["Application Strategy", "Essay Writing", "Interview Prep", "Career Guidance"],
+    duration: "6 months",
+    level: "High School Students",
   },
   {
     id: 4,
-    title: "Design Awesome Interfaces",
-    description: "Want a standout user experience? We craft intuitive, beautiful UI/UX designs that keep users coming back.",
-    icon: Lightbulb,
+    title: "Entrepreneurship Bootcamp",
+    description: "Build and launch your startup with comprehensive business training",
+    icon: Briefcase,
     color: "bg-purple-500",
-    benefits: ["UI/UX Design", "User Research", "Interactive Prototypes", "Branding Integration"],
-    type: "Technical [t]",
+    features: ["Business Planning", "Market Research", "Funding Strategies", "Launch Support"],
+    duration: "16 weeks",
+    level: "Intermediate",
   },
   {
     id: 5,
-    title: "Architect Scalable Systems",
-    description: "Scaling issues? We design robust tech architectures to ensure your startup grows seamlessly.",
-    icon: Briefcase,
-    color: "bg-teal-500",
-    benefits: ["Cloud Architecture", "Microservices", "Performance Optimization", "Scalability Planning"],
-    type: "Technical [t]",
+    title: "Digital Marketing Pro",
+    description: "Master social media, SEO, content marketing, and digital advertising",
+    icon: TrendingUp,
+    color: "bg-orange-500",
+    features: ["Social Media Strategy", "SEO Optimization", "Content Creation", "Analytics"],
+    duration: "10 weeks",
+    level: "Beginner to Intermediate",
   },
   {
     id: 6,
-    title: "Prototype Tech Ideas",
-    description: "Need to test an idea fast? We build working prototypes to validate your vision and impress stakeholders.",
-    icon: Zap,
-    color: "bg-yellow-500",
-    benefits: ["Rapid MVP Development", "Proof of Concept", "Iterative Testing", "Stakeholder Demos"],
-    type: "Technical [t]",
+    title: "Data Science & Analytics",
+    description: "Learn data analysis, machine learning, and business intelligence",
+    icon: Target,
+    color: "bg-indigo-500",
+    features: ["Python/R Programming", "Machine Learning", "Data Visualization", "Statistical Analysis"],
+    duration: "14 weeks",
+    level: "Intermediate to Advanced",
   },
   {
     id: 7,
-    title: "Craft Compelling Visions",
-    description: "Can’t articulate your vision? We create inspiring stories to rally your team and captivate investors.",
-    icon: MessageCircle,
-    color: "bg-red-500",
-    benefits: ["Storytelling Strategy", "Brand Narrative", "Investor Pitches", "Team Alignment"],
-    type: "Non-Technical [n]",
+    title: "Creative Design Studio",
+    description: "Master graphic design, UI/UX, and creative problem-solving",
+    icon: Lightbulb,
+    color: "bg-yellow-500",
+    features: ["Graphic Design", "UI/UX Design", "Creative Thinking", "Design Tools"],
+    duration: "12 weeks",
+    level: "Beginner to Intermediate",
   },
   {
     id: 8,
-    title: "Understand Your Customers",
-    description: "Not sure what your customers want? We conduct deep research to align your product with market needs.",
+    title: "Project Management",
+    description: "Learn agile methodologies, team leadership, and project execution",
     icon: Users,
-    color: "bg-pink-500",
-    benefits: ["Customer Interviews", "Market Analysis", "User Personas", "Feedback Integration"],
-    type: "Non-Technical [n]",
+    color: "bg-teal-500",
+    features: ["Agile Methodologies", "Team Leadership", "Risk Management", "Quality Assurance"],
+    duration: "8 weeks",
+    level: "Intermediate",
   },
   {
     id: 9,
-    title: "Close Deals & Partnerships",
-    description: "Need to grow your network? We help you land sales and build strategic partnerships to fuel growth.",
-    icon: Briefcase,
-    color: "bg-orange-500",
-    benefits: ["Sales Strategy", "Partnership Outreach", "Negotiation Support", "CRM Setup"],
-    type: "Non-Technical [n]",
+    title: "Financial Literacy",
+    description: "Master personal finance, investing, and financial planning",
+    icon: Award,
+    color: "bg-emerald-500",
+    features: ["Personal Finance", "Investment Strategies", "Financial Planning", "Risk Assessment"],
+    duration: "6 weeks",
+    level: "All Levels",
   },
   {
     id: 10,
-    title: "Grow Your Audience",
-    description: "Struggling to get traction? Our growth marketing strategies attract and retain your ideal customers.",
-    icon: TrendingUp,
-    color: "bg-cyan-500",
-    benefits: ["Social Media Campaigns", "SEO Optimization", "Content Marketing", "Growth Analytics"],
-    type: "Non-Technical [n]",
+    title: "Public Speaking Mastery",
+    description: "Overcome fear and become a confident, compelling speaker",
+    icon: MessageCircle,
+    color: "bg-red-500",
+    features: ["Confidence Building", "Speech Writing", "Presentation Skills", "Audience Engagement"],
+    duration: "8 weeks",
+    level: "All Levels",
   },
   {
     id: 11,
-    title: "Run Smooth Operations",
-    description: "Operations a mess? We streamline processes and execution to keep your startup running like clockwork.",
-    icon: Award,
-    color: "bg-emerald-500",
-    benefits: ["Process Optimization", "Project Management", "Team Coordination", "Efficiency Boost"],
-    type: "Non-Technical [n]",
+    title: "Innovation & Creativity",
+    description: "Unlock your creative potential and develop innovative thinking",
+    icon: Zap,
+    color: "bg-violet-500",
+    features: ["Creative Thinking", "Innovation Methods", "Problem Solving", "Idea Generation"],
+    duration: "6 weeks",
+    level: "All Levels",
   },
   {
     id: 12,
-    title: "Pitch & Raise Funds",
-    description: "Need funding to grow? We craft winning pitches and strategies to secure investment for your startup.",
+    title: "Career Acceleration",
+    description: "Fast-track your career with strategic planning and skill development",
     icon: Star,
-    color: "bg-violet-500",
-    benefits: ["Pitch Deck Creation", "Investor Outreach", "Funding Strategy", "Valuation Guidance"],
-    type: "Non-Technical [n]",
+    color: "bg-cyan-500",
+    features: ["Career Strategy", "Skill Assessment", "Network Building", "Interview Mastery"],
+    duration: "10 weeks",
+    level: "All Levels",
   },
 ]
 
-export default function StartupSupportPage() {
+export default function CoursesPage() {
   const [selectedServices, setSelectedServices] = useState<number[]>([])
   const [formData, setFormData] = useState({
     name: "",
@@ -169,8 +181,8 @@ export default function StartupSupportPage() {
     try {
       const formDataToSend = new FormData()
       formDataToSend.append("access_key", "f3993f73-3c04-4f7b-ad60-630c82bb01cc")
-      formDataToSend.append("subject", "New Startup Support Inquiry")
-      formDataToSend.append("from_name", "Tapri Startup Support")
+      formDataToSend.append("subject", "New Course Interest Form")
+      formDataToSend.append("from_name", "Tapri Course Interest")
 
       // Add all form fields
       Object.entries(formData).forEach(([key, value]) => {
@@ -193,7 +205,9 @@ export default function StartupSupportPage() {
       const result = await response.json()
 
       if (result.success) {
-        toast.success("Thank you for your inquiry! We'll contact you within 24 hours to discuss your startup needs.")
+        toast.success("Thank you for your interest! We'll contact you within 24 hours.")
+
+        // Reset form
         setFormData({
           name: "",
           email: "",
@@ -220,47 +234,51 @@ export default function StartupSupportPage() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <Coffee className="h-4 w-4" />
-            Your Startup's Missing Piece
+            Creator's Secret Sauce
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-yellow-600 via-red-500 to-purple-600 bg-clip-text text-transparent">
-            Complete Your Startup Puzzle
+            Unlock Your Potential
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-            We’re here to fill the gaps in your startup. Whether you need technical expertise or business strategy, our specialized services help you build, grow, and succeed.
+            Transform your skills with our comprehensive learning programs. Each service is carefully crafted to
+            accelerate your growth and unlock new opportunities.
           </p>
         </div>
 
-        {/* How We Help Section */}
+        {/* How It Works Section */}
         <div className="mb-20 bg-card rounded-3xl p-8 shadow-lg border">
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-12 bg-gradient-to-r from-yellow-600 to-red-500 bg-clip-text text-transparent">
-            How We Fill Your Gaps
+            How Our Secret Sauces Work
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="h-8 w-8 text-yellow-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">1. Identify Your Needs</h3>
+              <h3 className="text-xl font-semibold mb-3">1. Choose Your Path</h3>
               <p className="text-muted-foreground">
-                Tell us your startup’s challenges, and we’ll match you with the perfect technical or non-technical support.
+                Select from our curated services based on your goals and interests. Each program is designed for
+                specific skill development.
               </p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="h-8 w-8 text-red-500" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">2. Expert Execution</h3>
+              <h3 className="text-xl font-semibold mb-3">2. Expert Guidance</h3>
               <p className="text-muted-foreground">
-                Our industry pros jump in to deliver high-quality solutions, from coding to pitching, tailored to your goals.
+                Work with industry experts and mentors who provide personalized guidance, feedback, and support
+                throughout your journey.
               </p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Award className="h-8 w-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">3. Accelerate Success</h3>
+              <h3 className="text-xl font-semibold mb-3">3. Achieve Results</h3>
               <p className="text-muted-foreground">
-                Watch your startup thrive with our support, driving growth, investment, and market-ready solutions.
+                Complete projects, build your portfolio, and gain certifications that demonstrate your new skills to
+                employers and clients.
               </p>
             </div>
           </div>
@@ -282,18 +300,22 @@ export default function StartupSupportPage() {
                     <IconComponent className="h-8 w-8 text-white" />
                   </div>
                   <CardTitle className="text-lg mb-2">{service.title}</CardTitle>
-                  <Badge variant="secondary" className="text-xs mb-3">
-                    {service.type}
-                  </Badge>
+                  <div className="flex justify-center gap-2 mb-3">
+                    <Badge variant="secondary" className="text-xs">
+                      {service.duration}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {service.level}
+                    </Badge>
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <CardDescription className="text-center mb-4 text-sm">{service.description}</CardDescription>
                   <div className="space-y-2 mb-6">
-                    <p className="text-sm font-semibold text-center">What You Get:</p>
-                    {service.benefits.map((benefit, index) => (
+                    {service.features.map((feature, index) => (
                       <div key={index} className="flex items-center gap-2 text-sm">
                         <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />
-                        <span className="text-muted-foreground">{benefit}</span>
+                        <span className="text-muted-foreground">{feature}</span>
                       </div>
                     ))}
                   </div>
@@ -301,7 +323,7 @@ export default function StartupSupportPage() {
                     onClick={scrollToForm}
                     className="w-full bg-gradient-to-r from-yellow-600 to-red-500 hover:from-yellow-700 hover:to-red-600 text-white"
                   >
-                    Fill This Gap <ArrowRight className="ml-2 h-4 w-4" />
+                    Learn More <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardContent>
               </Card>
@@ -313,19 +335,19 @@ export default function StartupSupportPage() {
         <div id="service-form" className="bg-card rounded-3xl p-8 shadow-xl border">
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold mb-4 bg-gradient-to-r from-yellow-600 to-red-500 bg-clip-text text-transparent">
-              Let’s Complete Your Startup
+              Ready to Transform Your Future?
             </h2>
             <p className="text-muted-foreground text-lg">
-              Select the support you need, and we’ll craft a tailored plan to fill your startup’s gaps.
+              Select the services you're interested in and we'll create a personalized learning path for you.
             </p>
           </div>
 
-          {/* Built-in Form */}
+          {/* Option 1: Built-in Form */}
           <div className="max-w-4xl mx-auto mb-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Service Selection */}
               <div>
-                <Label className="text-lg font-semibold mb-4 block">What Gaps Do You Need Filled?</Label>
+                <Label className="text-lg font-semibold mb-4 block">Select Services You're Interested In:</Label>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {services.map((service) => (
                     <div
@@ -337,14 +359,9 @@ export default function StartupSupportPage() {
                         checked={selectedServices.includes(service.id)}
                         onCheckedChange={() => handleServiceToggle(service.id)}
                       />
-                      <div>
-                        <Label htmlFor={`service-${service.id}`} className="text-sm font-medium cursor-pointer">
-                          {service.title}
-                        </Label>
-                        <Badge variant="secondary" className="text-xs mt-1">
-                          {service.type}
-                        </Badge>
-                      </div>
+                      <Label htmlFor={`service-${service.id}`} className="text-sm font-medium cursor-pointer">
+                        {service.title}
+                      </Label>
                     </div>
                   ))}
                 </div>
@@ -398,7 +415,7 @@ export default function StartupSupportPage() {
                 </div>
                 <div>
                   <Label htmlFor="experience" className="text-sm font-medium mb-2 block">
-                    Startup Stage
+                    Experience Level
                   </Label>
                   <select
                     id="experience"
@@ -406,18 +423,18 @@ export default function StartupSupportPage() {
                     onChange={(e) => setFormData((prev) => ({ ...prev, experience: e.target.value }))}
                     className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    <option value="">Select your stage</option>
-                    <option value="idea">Idea Stage</option>
-                    <option value="prototype">Prototype</option>
-                    <option value="mvp">MVP</option>
-                    <option value="scaling">Scaling</option>
+                    <option value="">Select your level</option>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                    <option value="expert">Expert</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <Label htmlFor="message" className="text-sm font-medium mb-2 block">
-                  Tell Us About Your Startup
+                  Additional Message
                 </Label>
                 <Textarea
                   id="message"
@@ -425,7 +442,7 @@ export default function StartupSupportPage() {
                   onChange={(e) => setFormData((prev) => ({ ...prev, message: e.target.value }))}
                   className="w-full"
                   rows={4}
-                  placeholder="Share your startup’s goals, challenges, or specific needs..."
+                  placeholder="Tell us about your goals, timeline, or any specific requirements..."
                 />
               </div>
 
@@ -443,12 +460,12 @@ export default function StartupSupportPage() {
                     </>
                   ) : (
                     <>
-                      Get Support Now <Send className="ml-2 h-5 w-5" />
+                      Get Started Today <Send className="ml-2 h-5 w-5" />
                     </>
                   )}
                 </Button>
                 <p className="text-sm text-muted-foreground mt-4">
-                  We’ll contact you within 24 hours to discuss how we can help your startup succeed.
+                  We'll contact you within 24 hours to discuss your personalized learning path.
                 </p>
               </div>
             </form>
@@ -457,9 +474,9 @@ export default function StartupSupportPage() {
           {/* Option 2: External Form Integration Space */}
           <div className="border-t pt-8">
             <div className="text-center">
-              <h3 className="text-xl font-semibold mb-4">Need a Detailed Consultation?</h3>
+              <h3 className="text-xl font-semibold mb-4">Prefer a Different Form?</h3>
               <p className="text-muted-foreground mb-6">
-                Use our external form for a more in-depth discussion about your startup’s needs.
+                You can also use our external form for a more detailed application process.
               </p>
 
               {/* Space for Tally/Google Form Integration */}
@@ -491,11 +508,11 @@ export default function StartupSupportPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-yellow-600 mb-2">500+</div>
-              <div className="text-muted-foreground text-sm">Startups Supported</div>
+              <div className="text-muted-foreground text-sm">Students Trained</div>
             </div>
             <div className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-red-500 mb-2">95%</div>
-              <div className="text-muted-foreground text-sm">Client Satisfaction</div>
+              <div className="text-muted-foreground text-sm">Success Rate</div>
             </div>
             <div className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">50+</div>

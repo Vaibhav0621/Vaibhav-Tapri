@@ -19,8 +19,8 @@ export default function HomePage() {
         <SetupBanner />
 
         {/* Hero Section */}
-        <div className="relative py-20 text-center rounded-3xl mb-16 bg-gradient-to-br from-yellow-50 via-white to-red-50 dark:from-black dark:via-gray-900 dark:to-gray-800 transition-all duration-500">
-  <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-yellow-100/20 to-red-100/20 dark:from-gray-800/40 dark:to-gray-700/30"></div>
+        <div className="relative py-20 text-center bg-gradient-to-br from-yellow-50 via-white to-red-50 rounded-3xl mb-16">
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-100/20 to-red-100/20 rounded-3xl"></div>
           <div className="relative z-10">
             <Logo size="lg" className="justify-center mb-8" />
             <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-yellow-600 via-red-500 to-black bg-clip-text text-transparent">
