@@ -1,292 +1,472 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Users, Target, Lightbulb, Coffee, Zap, Award, Heart } from "lucide-react"
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
-import Logo from "@/components/logo"
-import SuccessCounter from "@/components/success-counter"
-import { SetupBanner } from "@/components/setup-banner"
-import { isSupabaseConfigured } from "@/lib/supabase"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import {
+  Sparkles,
+  Rocket,
+  Users,
+  Target,
+  TrendingUp,
+  Star,
+  ArrowRight,
+  Zap,
+  Globe,
+  Heart,
+  Award,
+  Bot,
+  Mail,
+  Phone,
+  BarChart3,
+  MessageSquare,
+  Linkedin,
+  PenTool,
+  Shield,
+} from "lucide-react"
+
+const features = [
+  {
+    icon: <Rocket className="w-6 h-6" />,
+    title: "Launch Faster",
+    description: "Turn your ideas into reality with the right team in weeks, not months.",
+  },
+  {
+    icon: <Users className="w-6 h-6" />,
+    title: "Find Co-founders",
+    description: "Connect with passionate entrepreneurs who share your vision and drive.",
+  },
+  {
+    icon: <Target className="w-6 h-6" />,
+    title: "Skill Matching",
+    description: "Our AI matches you with people who have the exact skills you need.",
+  },
+  {
+    icon: <TrendingUp className="w-6 h-6" />,
+    title: "Scale Together",
+    description: "Build sustainable businesses with proven frameworks and mentorship.",
+  },
+]
+
+const automationServices = [
+  {
+    icon: <Linkedin className="w-8 h-8" />,
+    title: "LinkedIn Lead Generator",
+    description: "Automatically find and connect with potential customers, partners, and team members",
+    features: ["Auto-connect requests", "Profile scraping", "Lead scoring", "Message templates"],
+    price: "$29.99/month",
+    category: "Lead Generation",
+    color: "from-blue-500 to-blue-600",
+  },
+  {
+    icon: <PenTool className="w-8 h-8" />,
+    title: "AI Content Writer",
+    description: "Generate high-quality blog posts, social media content, and marketing copy",
+    features: ["Blog post generation", "Social media posts", "SEO optimization", "Brand voice training"],
+    price: "$19.99/month",
+    category: "Content Creation",
+    color: "from-purple-500 to-purple-600",
+  },
+  {
+    icon: <Mail className="w-8 h-8" />,
+    title: "Email Campaign Automation",
+    description: "Create, send, and track email campaigns with advanced automation",
+    features: ["Drag-drop builder", "A/B testing", "Automated sequences", "Analytics"],
+    price: "$39.99/month",
+    category: "Email Marketing",
+    color: "from-green-500 to-green-600",
+  },
+  {
+    icon: <Phone className="w-8 h-8" />,
+    title: "Smart Calling Assistant",
+    description: "AI-powered calling system for lead qualification and customer support",
+    features: ["AI voice calls", "Call scheduling", "Lead qualification", "Call recording"],
+    price: "$99.99/month",
+    category: "Sales Automation",
+    color: "from-red-500 to-red-600",
+  },
+  {
+    icon: <MessageSquare className="w-8 h-8" />,
+    title: "Customer Support Bot",
+    description: "Intelligent chatbot for 24/7 customer support and lead capture",
+    features: ["24/7 chat support", "Lead qualification", "Knowledge base", "Human handoff"],
+    price: "$49.99/month",
+    category: "Customer Support",
+    color: "from-cyan-500 to-cyan-600",
+  },
+  {
+    icon: <BarChart3 className="w-8 h-8" />,
+    title: "Analytics Dashboard",
+    description: "Comprehensive analytics and reporting for all your business metrics",
+    features: ["Real-time dashboards", "Custom reports", "Goal tracking", "Data export"],
+    price: "$34.99/month",
+    category: "Analytics",
+    color: "from-orange-500 to-orange-600",
+  },
+]
+
+const stats = [
+  { number: "500+", label: "Active Projects" },
+  { number: "2,000+", label: "Entrepreneurs" },
+  { number: "150+", label: "Successful Launches" },
+  { number: "95%", label: "Success Rate" },
+]
+
+const testimonials = [
+  {
+    name: "Sarah Chen",
+    role: "Founder, EcoTech",
+    avatar: "/placeholder-user.jpg",
+    content: "Found my perfect co-founder in just 2 weeks. We've raised $500K since launching!",
+  },
+  {
+    name: "Alex Rodriguez",
+    role: "CEO, FinanceFlow",
+    avatar: "/placeholder-user.jpg",
+    content: "The skill matching is incredible. Built our MVP in record time with the right team.",
+  },
+  {
+    name: "Maya Patel",
+    role: "CTO, AICreate",
+    avatar: "/placeholder-user.jpg",
+    content: "Tapri helped me find technical co-founders who truly understood my vision.",
+  },
+]
+
+const whyChooseUs = [
+  {
+    icon: <Zap className="w-5 h-5" />,
+    title: "Lightning Fast",
+    description: "Get matched with potential co-founders in under 24 hours",
+  },
+  {
+    icon: <Globe className="w-5 h-5" />,
+    title: "Global Network",
+    description: "Access entrepreneurs from 50+ countries worldwide",
+  },
+  {
+    icon: <Heart className="w-5 h-5" />,
+    title: "Passion First",
+    description: "We match based on passion and vision, not just skills",
+  },
+  {
+    icon: <Award className="w-5 h-5" />,
+    title: "Proven Success",
+    description: "95% of our matched teams launch their MVP within 6 months",
+  },
+]
 
 export default function HomePage() {
-  const isConfigured = isSupabaseConfigured()
-  const user = null // Assuming user is null for this example
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    setIsVisible(true)
+  }, [])
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        <SetupBanner />
-
-        {/* Hero Section */}
-        <div className="relative py-20 text-center rounded-3xl mb-16 bg-gradient-to-br from-yellow-50 via-white to-red-50 dark:from-black dark:via-gray-900 dark:to-gray-800 transition-all duration-500">
-  <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-yellow-100/20 to-red-100/20 dark:from-gray-800/40 dark:to-gray-700/30"></div>
-          <div className="relative z-10">
-            <Logo size="lg" className="justify-center mb-8" />
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-yellow-600 via-red-500 to-black bg-clip-text text-transparent">
-              Where Ideas Meet
-              <br />
-              Passionate Minds
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Join the ultimate collaboration hub where brilliant minds brew the next big thing. Create projects,
-              connect with innovators, and turn your wildest ideas into reality.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Button
-                asChild
-                size="lg"
-                className="bg-gradient-to-r from-yellow-600 to-red-500 hover:from-yellow-700 hover:to-red-600 text-white font-medium text-lg px-8 py-4 shadow-lg"
-              >
-                <Link href="/create-project">
-                  Start Your Tapri <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="border-2 border-yellow-600 text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-950/20 font-medium text-lg px-8 py-4 shadow-lg"
-              >
-                <Link href="/tapris">Explore Projects</Link>
-              </Button>
-              {!user && (
-                <Button
-                  asChild
-                  variant="secondary"
-                  size="lg"
-                  className="bg-white/80 text-gray-800 hover:bg-white font-medium text-lg px-8 py-4 shadow-lg"
-                >
-                  <Link href="/login">Sign In</Link>
-                </Button>
-              )}
-            </div>
-
-            {/* Success Counter */}
-            <SuccessCounter />
-          </div>
-        </div>
-
-        {/* Why Choose Tapri */}
-        <div className="py-20">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-600 to-red-500 bg-clip-text text-transparent">
-              Why Choose Tapri?
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Experience the future of collaborative innovation with our unique platform
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="group border-2 border-yellow-200 hover:border-yellow-400 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-yellow-50 to-white">
-              <CardHeader className="text-center">
-                <div className="mx-auto mb-4 p-3 bg-yellow-100 rounded-full w-fit group-hover:scale-110 transition-transform">
-                  <Users className="h-8 w-8 text-yellow-600" />
-                </div>
-                <CardTitle className="text-xl">Connect & Collaborate</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 text-center">
-                  Find passionate creators who share your vision. Build diverse teams with complementary skills.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="group border-2 border-red-200 hover:border-red-400 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-red-50 to-white">
-              <CardHeader className="text-center">
-                <div className="mx-auto mb-4 p-3 bg-red-100 rounded-full w-fit group-hover:scale-110 transition-transform">
-                  <Target className="h-8 w-8 text-red-500" />
-                </div>
-                <CardTitle className="text-xl">Validate Ideas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 text-center">
-                  Test concepts with innovators. Get feedback, iterate quickly, and build what people want.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="group border-2 border-green-200 hover:border-green-400 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-green-50 to-white">
-              <CardHeader className="text-center">
-                <div className="mx-auto mb-4 p-3 bg-green-100 rounded-full w-fit group-hover:scale-110 transition-transform">
-                  <Lightbulb className="h-8 w-8 text-green-600" />
-                </div>
-                <CardTitle className="text-xl">Learn & Grow</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 text-center">
-                  Gain real-world experience on exciting projects. Develop skills and build your portfolio.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="group border-2 border-purple-200 hover:border-purple-400 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-purple-50 to-white">
-              <CardHeader className="text-center">
-                <div className="mx-auto mb-4 p-3 bg-purple-100 rounded-full w-fit group-hover:scale-110 transition-transform">
-                  <Award className="h-8 w-8 text-purple-600" />
-                </div>
-                <CardTitle className="text-xl">Achieve Success</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 text-center">
-                  Turn ideas into successful ventures. Get recognized for your contributions and achievements.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Featured Projects with Images */}
-        <div className="py-20 bg-gradient-to-r from-gray-50 to-gray-100 rounded-3xl">
-          <div className="px-8">
-            <div className="flex justify-between items-center mb-12">
-              <div>
-                <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-600 to-red-500 bg-clip-text text-transparent">
-                  Featured Tapris
-                </h2>
-                <p className="text-xl text-gray-600">Discover amazing projects from our community</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-yellow-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-yellow-950/20">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden py-20 lg:py-32">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="text-center">
+            <div
+              className={`transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+            >
+              <div className="inline-flex items-center gap-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
+                <Sparkles className="w-4 h-4" />
+                Welcome to the Future of Entrepreneurship
               </div>
-              <Button
-                asChild
-                variant="outline"
-                className="border-2 border-yellow-600 text-yellow-700 hover:bg-yellow-50"
-              >
-                <Link href="/tapris">
-                  View All <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* Web Development Project */}
-              <Card className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-yellow-300">
-                <div className="aspect-video relative overflow-hidden">
-                  <Image
-                    src="/images/web-development.jpeg"
-                    alt="Web Development Project"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <Badge className="absolute top-3 right-3 bg-green-500 text-white">Active</Badge>
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-lg">Web Development Bootcamp</CardTitle>
-                  <CardDescription>Learn modern web development with React, Node.js, and more</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
-                    <span>12 members</span>
-                    <span>3 open positions</span>
-                  </div>
-                  <Button asChild className="w-full bg-yellow-600 hover:bg-yellow-700 text-white">
-                    <Link href="/tapris/1">Learn More</Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <h1 className="text-6xl lg:text-8xl font-black mb-6 leading-tight">
+                Build Your
+                <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">
+                  Dream Team
+                </span>
+              </h1>
 
-              {/* Soft Skills Project */}
-              <Card className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-yellow-300">
-                <div className="aspect-video relative overflow-hidden">
-                  <Image
-                    src="/images/soft-skills.jpeg"
-                    alt="Soft Skills Development"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <Badge className="absolute top-3 right-3 bg-blue-500 text-white">Starting Soon</Badge>
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-lg">Soft Skills Mastery</CardTitle>
-                  <CardDescription>Develop essential communication and leadership skills</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
-                    <span>8 members</span>
-                    <span>5 open positions</span>
-                  </div>
-                  <Button asChild className="w-full bg-yellow-600 hover:bg-yellow-700 text-white">
-                    <Link href="/tapris/2">Learn More</Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <p className="text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8 leading-relaxed">
+                Connect with passionate entrepreneurs, find your perfect co-founders, and turn your startup ideas into
+                reality.
+                <span className="font-semibold text-yellow-600">
+                  {" "}
+                  Join 2,000+ builders already creating the future.
+                </span>
+              </p>
 
-              {/* College Counseling Project */}
-              <Card className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-yellow-300">
-                <div className="aspect-video relative overflow-hidden">
-                  <Image
-                    src="/images/college-counseling.jpeg"
-                    alt="College Counseling"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <Badge className="absolute top-3 right-3 bg-purple-500 text-white">New</Badge>
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-lg">College Counseling Hub</CardTitle>
-                  <CardDescription>Get expert guidance for your college journey</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
-                    <span>15 members</span>
-                    <span>2 open positions</span>
-                  </div>
-                  <Button asChild className="w-full bg-yellow-600 hover:bg-yellow-700 text-white">
-                    <Link href="/tapris/3">Learn More</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="py-20 text-center bg-gradient-to-r from-yellow-600 via-red-500 to-yellow-600 rounded-3xl text-white mt-16">
-          <div className="px-8">
-            <Coffee className="h-16 w-16 mx-auto mb-6 opacity-90" />
-            <h2 className="text-4xl font-bold mb-4">Ready to Brew Something Amazing?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-              Join thousands of innovators who are already building the future. Your next big idea is just one Tapri
-              away.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                asChild
-                size="lg"
-                className="bg-white text-yellow-600 hover:bg-gray-100 font-medium text-lg px-8 py-4"
-              >
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                 <Link href="/create-project">
-                  Create Your Tapri <Zap className="ml-2 h-5 w-5" />
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black font-bold rounded-xl px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg"
+                  >
+                    <Rocket className="w-5 h-5 mr-2" />
+                    Start Your Tapri
+                  </Button>
                 </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="border-2 border-white text-white hover:bg-white/10 font-medium text-lg px-8 py-4"
-              >
+
                 <Link href="/tapris">
-                  Explore Projects <ArrowRight className="ml-2 h-5 w-5" />
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-2 border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm hover:bg-yellow-50 dark:hover:bg-yellow-950/20 rounded-xl px-8 py-4 font-semibold text-lg transition-all duration-300"
+                  >
+                    Browse Projects
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
                 </Link>
-              </Button>
+              </div>
             </div>
           </div>
         </div>
 
-        {!isConfigured && (
-          <div className="text-center mt-16 p-8 bg-yellow-50 rounded-2xl border-2 border-yellow-200">
-            <Heart className="h-12 w-12 text-yellow-600 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">Demo Mode Active</h3>
-            <p className="text-gray-600">
-              You're viewing demo data. Connect your Supabase database to unlock the full Tapri experience with real
-              projects and users.
+        {/* Floating Elements */}
+        <div className="absolute top-20 left-10 w-20 h-20 bg-yellow-400/20 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-32 h-32 bg-yellow-400/10 rounded-full blur-2xl animate-pulse delay-1000"></div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-16 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-4xl lg:text-5xl font-black text-yellow-600 mb-2">{stat.number}</div>
+                <div className="text-gray-600 dark:text-gray-300 font-medium">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Automation Services Section */}
+      <section className="py-20 bg-gradient-to-r from-black to-gray-900 text-white">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 bg-yellow-100/10 text-yellow-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <Bot className="w-4 h-4" />
+              Secret Sauce for Your Startup
+            </div>
+            <h2 className="text-4xl lg:text-6xl font-bold mb-6">
+              Powerful{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">
+                Automations
+              </span>
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Focus on building your product while our AI-powered automations handle lead generation, content creation,
+              customer support, and more. Scale your startup without scaling your team.
             </p>
           </div>
-        )}
-      </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {automationServices.map((service, index) => (
+              <Card
+                key={index}
+                className="border-0 shadow-xl bg-white/10 backdrop-blur-sm rounded-3xl hover:shadow-2xl transition-all duration-300 hover:scale-105 group"
+              >
+                <CardHeader className="text-center pb-4">
+                  <div
+                    className={`w-16 h-16 bg-gradient-to-r ${service.color} rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg group-hover:shadow-xl transition-all duration-300`}
+                  >
+                    {service.icon}
+                  </div>
+                  <Badge className="bg-yellow-100/20 text-yellow-300 border-yellow-400/30 rounded-full mb-2">
+                    {service.category}
+                  </Badge>
+                  <CardTitle className="text-xl font-bold text-white group-hover:text-yellow-300 transition-colors">
+                    {service.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <p className="text-gray-300 leading-relaxed mb-4">{service.description}</p>
+
+                  <div className="space-y-2 mb-6">
+                    {service.features.map((feature, featureIndex) => (
+                      <div key={featureIndex} className="flex items-center gap-2 text-sm text-gray-400">
+                        <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
+                        {feature}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-2xl font-bold text-yellow-400">{service.price}</span>
+                    <Badge variant="outline" className="border-green-400/50 text-green-400">
+                      Free Trial
+                    </Badge>
+                  </div>
+
+                  <Button className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                    Get Started
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <p className="text-gray-300 mb-6 text-lg">Save 20+ hours per week with our automation suite</p>
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black font-bold rounded-xl px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              <Shield className="w-5 h-5 mr-2" />
+              View All Automations
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              Why Entrepreneurs Choose{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">
+                Tapri
+              </span>
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              We're not just another platform. We're your launchpad to entrepreneurial success.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {whyChooseUs.map((item, index) => (
+              <Card
+                key={index}
+                className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-2xl hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
+                <CardContent className="p-6 text-center">
+                  <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center text-yellow-600 mx-auto mb-4">
+                    {item.icon}
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{item.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{item.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20 bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950/20 dark:to-yellow-900/20">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">How It Works</h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              From idea to launch in three simple steps
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <Card
+                key={index}
+                className="border-0 shadow-lg bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
+                <CardHeader className="text-center pb-4">
+                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-2xl flex items-center justify-center text-black mx-auto mb-4 shadow-lg">
+                    {feature.icon}
+                  </div>
+                  <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center pt-0">
+                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">Success Stories</h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              Real entrepreneurs, real results, real impact
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <Card
+                key={index}
+                className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-2xl hover:shadow-xl transition-all duration-300"
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed italic">
+                    "{testimonial.content}"
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={testimonial.avatar || "/placeholder.svg"} alt={testimonial.name} />
+                      <AvatarFallback className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 font-semibold">
+                        {testimonial.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white">{testimonial.name}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{testimonial.role}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-black to-gray-900 text-white">
+        <div className="container mx-auto px-4 max-w-7xl text-center">
+          <h2 className="text-4xl lg:text-6xl font-bold mb-6">
+            Ready to Build Something{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">
+              Amazing?
+            </span>
+          </h2>
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8 leading-relaxed">
+            Join thousands of entrepreneurs who are already building the future. Your next co-founder is waiting.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link href="/create-project">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black font-bold rounded-xl px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Start Your Journey
+              </Button>
+            </Link>
+
+            <Link href="/tapris">
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black rounded-xl px-8 py-4 font-semibold text-lg transition-all duration-300 bg-transparent"
+              >
+                Explore Projects
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

@@ -4,10 +4,16 @@ import { Inter, Poppins } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/components/auth/auth-provider"
+import { Toaster } from "@/components/ui/toaster"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import { SetupBanner } from "@/components/setup-banner"
-import { ToastProvider } from "@/components/providers/toast-provider"
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+})
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -16,17 +22,16 @@ const poppins = Poppins({
   display: "swap",
 })
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-inter",
-  display: "swap",
-})
-
 export const metadata: Metadata = {
-  title: "Tapri - Transform Your Skills",
-  description: "Join collaborative projects and unlock your potential with expert-led learning experiences",
-  keywords: "learning, skills, projects, collaboration, education",
+  title: "Tapri - Connect, Create, Collaborate",
+  description: "Join innovative projects and connect with like-minded creators on Tapri platform",
+  keywords: ["projects", "collaboration", "startup", "innovation", "community"],
+  authors: [{ name: "Tapri Team" }],
+  openGraph: {
+    title: "Tapri - Connect, Create, Collaborate",
+    description: "Join innovative projects and connect with like-minded creators",
+    type: "website",
+  },
     generator: 'v0.dev'
 }
 
@@ -37,16 +42,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${poppins.variable} ${inter.variable} font-sans antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange={false}>
+      <body className={`${inter.variable} ${poppins.variable} font-sans antialiased`}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
-            <div className="flex flex-col min-h-screen">
+            <div className="min-h-screen flex flex-col">
               <SetupBanner />
               <Navbar />
               <main className="flex-1">{children}</main>
               <Footer />
             </div>
-            <ToastProvider />
+            <Toaster />
           </AuthProvider>
         </ThemeProvider>
       </body>

@@ -1,490 +1,460 @@
 "use client"
-import { useState, useEffect, useMemo } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, MapPin, Users, Eye, TrendingUp, Award, Clock, Filter, AlertCircle } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Search, Filter, Users, Calendar, MapPin, ExternalLink, Clock, TrendingUp, Sparkles } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
-import { SetupBanner } from "@/components/setup-banner"
-import { isSupabaseConfigured } from "@/lib/supabase"
-import { TapriService } from "@/lib/services/tapri-service"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import  staticProjects  from "./[id]/page"
 
-type Tapri = {
+interface Tapri {
   id: string
   title: string
-  tagline: string | null
   description: string
-  category: string
-  stage: string
+  project_type: string
+  timeline: string
+  team_size: string
   location: string
-  team_size: number
-  open_positions: number
-  banner_url: string | null
-  status: string
-  views: number
-  applications: number
+  required_skills: string
+  applications_count: number
   created_at: string
-  website: string | null
-  profiles?: {
-    full_name: string | null
-    avatar_url: string | null
+  creator: {
+    full_name: string
+    avatar_url?: string
   }
+  status: string
 }
 
-// Helper to map static TapriData to Tapri type used here
-function mapStaticToTapri(staticTapri: any, id: any) {
-  return {
-    id: id,
-    title: staticTapri.title,
-    tagline: staticTapri.tagline,
-    description: staticTapri.description,
-    category: staticTapri.category,
-    stage: staticTapri.stage,
-    location: staticTapri.location,
-    team_size: staticTapri.teamSize,
-    open_positions: staticTapri.openPositions,
-    banner_url: staticTapri.bannerImage,
-    status: staticTapri.status === "recruiting" ? "approved" : staticTapri.status,
-    views: staticTapri.views,
-    applications: staticTapri.applications,
-    created_at: staticTapri.createdAt,
-    website: staticTapri.website,
-    profiles: staticTapri.teamLeader
-      ? {
-          full_name: staticTapri.teamLeader.name,
-          avatar_url: staticTapri.teamLeader.image,
-        }
-      : undefined,
-  }
-}
+// Mock data for development
+const mockTapris: Tapri[] = [
+  {
+    id: "cb114509-61ca-42d4-b506-de8145149cb7",
+    title: "EcoTech Startup",
+    description:
+      "Revolutionary sustainable technology platform connecting eco-conscious consumers with green products and carbon tracking.",
+    project_type: "Tech Startup",
+    timeline: "6 months",
+    team_size: "4-6 people",
+    location: "Remote/San Francisco",
+    required_skills: "React, Node.js, Python, Machine Learning, UI/UX Design",
+    applications_count: 23,
+    created_at: "2024-01-15T10:30:00Z",
+    creator: {
+      full_name: "Sarah Chen",
+      avatar_url: "/placeholder-user.jpg",
+    },
+    status: "active",
+  },
+  {
+    id: "2",
+    title: "FinTech Revolution",
+    description: "Building the next generation of financial tools for Gen Z entrepreneurs and small business owners.",
+    project_type: "FinTech",
+    timeline: "8 months",
+    team_size: "5-8 people",
+    location: "New York/Remote",
+    required_skills: "React Native, Blockchain, Security, Finance",
+    applications_count: 31,
+    created_at: "2024-01-10T14:20:00Z",
+    creator: {
+      full_name: "Alex Rodriguez",
+      avatar_url: "/placeholder-user.jpg",
+    },
+    status: "active",
+  },
+  {
+    id: "3",
+    title: "AI Content Creator",
+    description:
+      "Democratizing content creation with AI-powered tools for social media influencers and small businesses.",
+    project_type: "AI/ML",
+    timeline: "4 months",
+    team_size: "3-5 people",
+    location: "Remote",
+    required_skills: "Python, TensorFlow, React, Video Processing",
+    applications_count: 18,
+    created_at: "2024-01-08T09:15:00Z",
+    creator: {
+      full_name: "Maya Patel",
+      avatar_url: "/placeholder-user.jpg",
+    },
+    status: "active",
+  },
+  {
+    id: "4",
+    title: "Social Impact Platform",
+    description:
+      "Connecting volunteers with local nonprofits to create meaningful community impact through technology.",
+    project_type: "Social Impact",
+    timeline: "5 months",
+    team_size: "6-8 people",
+    location: "Remote/Global",
+    required_skills: "React, Node.js, MongoDB, Mobile Development",
+    applications_count: 15,
+    created_at: "2024-01-05T16:45:00Z",
+    creator: {
+      full_name: "Jordan Kim",
+      avatar_url: "/placeholder-user.jpg",
+    },
+    status: "active",
+  },
+  {
+    id: "5",
+    title: "EdTech Innovation",
+    description: "Personalized learning platform using AI to adapt to individual student needs and learning styles.",
+    project_type: "EdTech",
+    timeline: "7 months",
+    team_size: "4-7 people",
+    location: "Boston/Remote",
+    required_skills: "Python, Machine Learning, React, Education Technology",
+    applications_count: 27,
+    created_at: "2024-01-03T11:30:00Z",
+    creator: {
+      full_name: "Emily Watson",
+      avatar_url: "/placeholder-user.jpg",
+    },
+    status: "active",
+  },
+  {
+    id: "6",
+    title: "HealthTech Wearables",
+    description: "Next-generation health monitoring devices with real-time analytics for preventive healthcare.",
+    project_type: "HealthTech",
+    timeline: "10 months",
+    team_size: "8-12 people",
+    location: "Seattle/Remote",
+    required_skills: "IoT, Hardware Design, Mobile Apps, Data Analytics",
+    applications_count: 42,
+    created_at: "2024-01-01T08:00:00Z",
+    creator: {
+      full_name: "Dr. Michael Chang",
+      avatar_url: "/placeholder-user.jpg",
+    },
+    status: "active",
+  },
+]
+
+const neonColors = [
+  "border-yellow-400 shadow-yellow-400/20",
+  "border-cyan-400 shadow-cyan-400/20",
+  "border-pink-400 shadow-pink-400/20",
+  "border-green-400 shadow-green-400/20",
+  "border-purple-400 shadow-purple-400/20",
+  "border-orange-400 shadow-orange-400/20",
+]
 
 export default function TaprisPage() {
-  const isConfigured = isSupabaseConfigured()
   const [tapris, setTapris] = useState<Tapri[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedStage, setSelectedStage] = useState("all")
-  const [selectedLocation, setSelectedLocation] = useState("all")
+  const [selectedType, setSelectedType] = useState("all")
 
   useEffect(() => {
-    async function fetchTapris() {
-      if (!isConfigured) {
-        setError("Database not configured. Please set up your Supabase connection.")
-        setLoading(false)
-        return
-      }
+    fetchTapris()
+  }, [])
 
+  const fetchTapris = async () => {
+    try {
       setLoading(true)
       setError(null)
 
-      try {
-        const { data } = await TapriService.getApprovedTapris(1, 12, selectedCategory, selectedStage)
-        // Map static tapris to Tapri type
-        const staticTapris = Object.entries(staticProjects).map(([id, tapri]) => mapStaticToTapri(tapri, id))
-        // Remove any db tapri with same id as static
-        const filteredDbTapris = (data || []).filter(
-          (t) => !staticTapris.some((s) => s.id && t.id && s.id.toLowerCase() === t.id.toLowerCase())
-        )
-        setTapris([...staticTapris, ...filteredDbTapris])
-      } catch (error: any) {
-        console.error("Error fetching tapris:", error)
-        setError(error.message || "Failed to load tapris")
-        setTapris([])
-      } finally {
-        setLoading(false)
+      const response = await fetch("/api/tapris")
+
+      if (response.ok) {
+        const data = await response.json()
+
+        // Handle different API response structures
+        let taprisArray: Tapri[] = []
+        if (Array.isArray(data)) {
+          taprisArray = data
+        } else if (data && Array.isArray(data.tapris)) {
+          taprisArray = data.tapris
+        } else if (data && Array.isArray(data.data)) {
+          taprisArray = data.data
+        } else {
+          console.warn("Unexpected API response structure:", data)
+          taprisArray = mockTapris
+        }
+
+        setTapris(taprisArray)
+      } else {
+        console.warn("API request failed, using mock data")
+        setTapris(mockTapris)
       }
-    }
-
-    fetchTapris()
-  }, [selectedCategory, selectedStage, isConfigured])
-
-  // Filter tapris based on search term and location
-  const filteredTapris = useMemo(() => {
-    let filtered = tapris
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (tapri) =>
-          tapri.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          tapri.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (tapri.tagline && tapri.tagline.toLowerCase().includes(searchTerm.toLowerCase())),
-      )
-    }
-
-    // Location filter
-    if (selectedLocation !== "all") {
-      filtered = filtered.filter((tapri) => tapri.location.toLowerCase().includes(selectedLocation.toLowerCase()))
-    }
-
-    return filtered
-  }, [tapris, searchTerm, selectedLocation])
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "approved":
-        return "bg-green-100 text-green-800 hover:bg-green-200"
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
-      case "rejected":
-        return "bg-red-100 text-red-800 hover:bg-red-200"
-      default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-200"
+    } catch (error) {
+      console.error("Error fetching tapris:", error)
+      setError("Failed to load projects. Showing sample data.")
+      setTapris(mockTapris)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const getStageIcon = (stage: string) => {
-    if (stage.includes("MVP") || stage.includes("Prototype")) return <Clock className="h-4 w-4" />
-    if (stage.includes("Growth") || stage.includes("Series")) return <TrendingUp className="h-4 w-4" />
-    if (stage.includes("Launch") || stage.includes("Commercial")) return <Award className="h-4 w-4" />
-    return <Clock className="h-4 w-4" />
-  }
+  // Ensure tapris is always an array before filtering
+  const safeTapris = Array.isArray(tapris) ? tapris : []
 
-  // Generate join URL - either external website or internal form
-  const getJoinUrl = (tapri: Tapri) => {
-    if (tapri.website) {
-      return tapri.website
-    }
-    // Use Web3Forms with Tapri details
-    return `https://web3forms.com/forms/f3993f73-3c04-4f7b-ad60-630c82bb01cc?tapri_id=${tapri.id}&tapri_title=${encodeURIComponent(tapri.title)}&tapri_category=${encodeURIComponent(tapri.category)}`
-  }
+  const filteredTapris = safeTapris.filter((tapri) => {
+    const matchesSearch =
+      tapri.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tapri.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesType = selectedType === "all" || tapri.project_type === selectedType
+    return matchesSearch && matchesType
+  })
 
-  if (!isConfigured) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <SetupBanner />
-        <Alert className="mt-8">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Database not configured. Please set up your Supabase connection to view and manage tapris.
-          </AlertDescription>
-        </Alert>
-      </div>
-    )
-  }
+  const projectTypes = ["all", ...Array.from(new Set(safeTapris.map((t) => t.project_type).filter(Boolean)))]
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <SetupBanner />
-
-        {/* Hero Section Skeleton */}
-        <div className="mb-12 text-center">
-          <div className="h-12 bg-gray-200 rounded-lg mb-4 max-w-md mx-auto animate-pulse"></div>
-          <div className="h-6 bg-gray-200 rounded-lg mb-8 max-w-2xl mx-auto animate-pulse"></div>
-        </div>
-
-        {/* Quick Grid Skeleton */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="border rounded-lg overflow-hidden animate-pulse">
-              <div className="aspect-video bg-gray-200"></div>
-              <div className="p-6">
-                <div className="h-6 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded mb-4"></div>
-                <div className="h-20 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <SetupBanner />
-        <Alert className="mt-8" variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-        <div className="text-center mt-8">
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-yellow-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-yellow-950/20">
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center mb-8">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-300">Loading amazing projects...</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 rounded-2xl">
+                <CardHeader>
+                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-5/6" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <SetupBanner />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-yellow-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-yellow-950/20">
+      <div className="container mx-auto px-4 py-12 max-w-7xl">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-4 py-2 rounded-full text-sm font-medium mb-4">
+            <Sparkles className="w-4 h-4" />
+            Discover Amazing Projects
+          </div>
+          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
+            Browse{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">Tapris</span>
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            Join innovative projects, connect with ambitious entrepreneurs, and build the future together.
+          </p>
 
-      {/* Hero Section */}
-      <div className="mb-12 text-center">
-        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-600 via-red-500 to-orange-500 bg-clip-text text-transparent">
-          Discover Amazing Tapris
-        </h1>
-        <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-          Explore innovative projects and find your next collaboration opportunity. Join passionate creators building
-          the future.
-        </p>
+          {error && (
+            <div className="mt-4 p-3 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+        </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col gap-4 mb-8 max-w-6xl mx-auto">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search projects by title, description, or tagline..."
-              className="pl-10 h-12 text-lg"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          {/* Filters */}
+        <div className="mb-8 space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filters:</span>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input
+                placeholder="Search projects, skills, or keywords..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-12 rounded-xl border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+              />
             </div>
-
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full md:w-48 h-10">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="web-development">Web Development</SelectItem>
-                <SelectItem value="mobile-app">Mobile App</SelectItem>
-                <SelectItem value="ai-ml">AI/ML</SelectItem>
-                <SelectItem value="blockchain">Blockchain</SelectItem>
-                <SelectItem value="iot">IoT</SelectItem>
-                <SelectItem value="fintech">FinTech</SelectItem>
-                <SelectItem value="healthtech">HealthTech</SelectItem>
-                <SelectItem value="edtech">EdTech</SelectItem>
-                <SelectItem value="ecommerce">E-commerce</SelectItem>
-                <SelectItem value="gaming">Gaming</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedStage} onValueChange={setSelectedStage}>
-              <SelectTrigger className="w-full md:w-48 h-10">
-                <SelectValue placeholder="All Stages" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Stages</SelectItem>
-                <SelectItem value="idea">Idea Stage</SelectItem>
-                <SelectItem value="planning">Planning</SelectItem>
-                <SelectItem value="prototype">Prototype</SelectItem>
-                <SelectItem value="MVP Development">MVP Development</SelectItem>
-                <SelectItem value="Beta Testing">Beta Testing</SelectItem>
-                <SelectItem value="Launch Ready">Launch Ready</SelectItem>
-                <SelectItem value="scaling">Scaling</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-              <SelectTrigger className="w-full md:w-48 h-10">
-                <SelectValue placeholder="All Locations" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-                <SelectItem value="remote">Remote</SelectItem>
-                <SelectItem value="san francisco">San Francisco</SelectItem>
-                <SelectItem value="new york">New York</SelectItem>
-                <SelectItem value="london">London</SelectItem>
-                <SelectItem value="berlin">Berlin</SelectItem>
-                <SelectItem value="bangalore">Bangalore</SelectItem>
-                <SelectItem value="toronto">Toronto</SelectItem>
-              </SelectContent>
-            </Select>
-
             <Button
               variant="outline"
-              onClick={() => {
-                setSearchTerm("")
-                setSelectedCategory("all")
-                setSelectedStage("all")
-                setSelectedLocation("all")
-              }}
-              className="w-full md:w-auto"
+              className="h-12 px-6 rounded-xl border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm hover:bg-yellow-50 dark:hover:bg-yellow-950/20 transition-all"
             >
-              Clear Filters
+              <Filter className="w-4 h-4 mr-2" />
+              Filters
             </Button>
           </div>
-        </div>
-      </div>
 
-      {/* Stats Section */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-        <div className="text-center p-6 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border border-yellow-200">
-          <div className="text-3xl font-bold text-yellow-600">{filteredTapris.length}</div>
-          <div className="text-sm text-gray-600">Active Tapris</div>
-        </div>
-        <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-          <div className="text-3xl font-bold text-blue-600">
-            {filteredTapris.reduce((sum, tapri) => sum + tapri.open_positions, 0)}
+          {/* Project Type Filter */}
+          <div className="flex flex-wrap gap-2">
+            {projectTypes.map((type) => (
+              <Button
+                key={type}
+                variant={selectedType === type ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedType(type)}
+                className={`rounded-full px-4 py-2 transition-all ${
+                  selectedType === type
+                    ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold shadow-lg hover:from-yellow-500 hover:to-yellow-600"
+                    : "border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 hover:bg-yellow-50 dark:hover:bg-yellow-950/20 text-gray-700 dark:text-gray-300"
+                }`}
+              >
+                {type === "all" ? "All Projects" : type}
+              </Button>
+            ))}
           </div>
-          <div className="text-sm text-gray-600">Open Positions</div>
         </div>
-        <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-          <div className="text-3xl font-bold text-green-600">
-            {filteredTapris.reduce((sum, tapri) => sum + tapri.team_size, 0)}
-          </div>
-          <div className="text-sm text-gray-600">Total Members</div>
-        </div>
-        <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-          <div className="text-3xl font-bold text-purple-600">
-            {filteredTapris.reduce((sum, tapri) => sum + tapri.applications, 0)}
-          </div>
-          <div className="text-sm text-gray-600">Applications</div>
-        </div>
-      </div>
 
-      {/* Results Count */}
-      <div className="mb-6">
-        <p className="text-gray-600">
-          Showing {filteredTapris.length} of {tapris.length} Tapris
-          {searchTerm && ` for "${searchTerm}"`}
-        </p>
-      </div>
-
-      {/* Projects Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredTapris.map((tapri) => (
-          <Card
-            key={tapri.id}
-            className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-yellow-300 bg-card shadow-md"
-          >
-            <Link href={`/tapris/${tapri.id}`} className="block">
-              <div className="aspect-video relative overflow-hidden">
-                <Image
-                  src={tapri.banner_url || "/placeholder.svg?height=200&width=400"}
-                  alt={tapri.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                {/* Status Badge */}
-                <div className="absolute top-3 right-3">
-                  <Badge className={getStatusColor(tapri.status)}>
-                    {tapri.status === "approved" ? "Active" : tapri.status}
-                  </Badge>
-                </div>
-
-                {/* Category Badge */}
-                <div className="absolute top-3 left-3">
-                  <Badge variant="outline" className="bg-white/90 text-gray-800 border-white">
-                    {tapri.category}
-                  </Badge>
-                </div>
-
-                {/* Stage Badge */}
-                <div className="absolute bottom-3 left-3 flex items-center gap-1">
-                  <Badge className="bg-black/70 text-white border-none flex items-center gap-1">
-                    {getStageIcon(tapri.stage)}
-                    {tapri.stage}
-                  </Badge>
-                </div>
-              </div>
-            </Link>
-
-            <CardHeader className="pb-3">
-              <Link href={`/tapris/${tapri.id}`} className="block">
-                <div className="flex justify-between items-start mb-2">
-                  <CardTitle className="text-xl group-hover:text-yellow-600 transition-colors line-clamp-1 text-card-foreground">
-                    {tapri.title}
-                  </CardTitle>
-                </div>
-                <CardDescription className="text-base font-medium text-muted-foreground line-clamp-1">
-                  {tapri.tagline || "No tagline provided"}
-                </CardDescription>
-              </Link>
-            </CardHeader>
-
-            <CardContent className="pt-0">
-              <Link href={`/tapris/${tapri.id}`} className="block mb-4">
-                <p className="text-sm text-muted-foreground line-clamp-3">{tapri.description}</p>
-              </Link>
-
-              {/* Key Metrics */}
-              <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                <div className="flex items-center gap-2 text-gray-500">
-                  <MapPin className="h-4 w-4" />
-                  <span className="truncate">{tapri.location}</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-500">
-                  <Users className="h-4 w-4" />
-                  <span>{tapri.team_size} members</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-500">
-                  <Eye className="h-4 w-4" />
-                  <span>{tapri.views.toLocaleString()} views</span>
-                </div>
-                <div className="flex items-center gap-2 text-green-600 font-medium">
-                  <Award className="h-4 w-4" />
-                  <span>{tapri.open_positions} positions</span>
-                </div>
-              </div>
-
-              {/* Creator Info */}
-              {tapri.profiles && (
-                <div className="mb-4 p-3 bg-muted rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Image
-                      src={tapri.profiles.avatar_url || "/placeholder.svg?height=32&width=32"}
-                      alt="Creator"
-                      width={32}
-                      height={32}
-                      className="rounded-full"
-                    />
-                    <div className="text-sm">
-                      <div className="font-medium text-foreground">{tapri.profiles.full_name || "Anonymous"}</div>
-                      <div className="text-muted-foreground">Project Creator</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-2">
-                <Button asChild className="flex-1" variant="outline">
-                  <Link href={`/tapris/${tapri.id}`}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    View Details
-                  </Link>
-                </Button>
-                <Button asChild className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white">
-                  <Link href={getJoinUrl(tapri)} target={tapri.website ? "_blank" : "_self"}>
-                    <Users className="mr-2 h-4 w-4" />
-                    Join Project
-                  </Link>
-                </Button>
-              </div>
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <Card className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-2xl">
+            <CardContent className="p-6 text-center">
+              <div className="text-3xl font-bold text-yellow-600 mb-2">{filteredTapris.length}</div>
+              <div className="text-gray-600 dark:text-gray-300 font-medium">Active Projects</div>
             </CardContent>
           </Card>
-        ))}
-      </div>
-
-      {filteredTapris.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">No Tapris found matching your criteria.</p>
-          <Button asChild className="mt-4 bg-yellow-600 hover:bg-yellow-700 text-white">
-            <Link href="/create-project">Create the First One!</Link>
-          </Button>
+          <Card className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-2xl">
+            <CardContent className="p-6 text-center">
+              <div className="text-3xl font-bold text-yellow-600 mb-2">
+                {filteredTapris.reduce((sum, t) => sum + (t.applications_count || 0), 0)}
+              </div>
+              <div className="text-gray-600 dark:text-gray-300 font-medium">Total Applications</div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-2xl">
+            <CardContent className="p-6 text-center">
+              <div className="text-3xl font-bold text-yellow-600 mb-2">
+                {new Set(filteredTapris.map((t) => t.project_type).filter(Boolean)).size}
+              </div>
+              <div className="text-gray-600 dark:text-gray-300 font-medium">Categories</div>
+            </CardContent>
+          </Card>
         </div>
-      )}
 
-      {/* Call to Action */}
-      <div className="mt-16 text-center p-12 bg-gradient-to-r from-yellow-600 via-red-500 to-orange-500 rounded-3xl text-white">
-        <h2 className="text-3xl font-bold mb-4">Don't See Your Perfect Project?</h2>
-        <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-          Create your own Tapri and bring together passionate individuals to build something amazing
-        </p>
-        <Button asChild size="lg" className="bg-white text-yellow-600 hover:bg-gray-100 font-medium">
-          <Link href="/create-project">Create Your Own Tapri</Link>
-        </Button>
+        {/* Tapris Grid */}
+        {filteredTapris.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No projects found</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">Try adjusting your search or filters</p>
+            <Link href="/create-project">
+              <Button className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black font-semibold rounded-xl px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                <Sparkles className="w-5 h-5 mr-2" />
+                Create Your Own Tapri
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredTapris.map((tapri, index) => {
+              const neonColor = neonColors[index % neonColors.length]
+              const createdDate = new Date(tapri.created_at).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })
+
+              return (
+                <Card
+                  key={tapri.id}
+                  className={`group border-2 ${neonColor} shadow-lg hover:shadow-2xl bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 rounded-2xl overflow-hidden`}
+                >
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <Badge
+                        variant="secondary"
+                        className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 px-3 py-1 rounded-full font-medium"
+                      >
+                        {tapri.project_type}
+                      </Badge>
+                      <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+                        <Calendar className="w-3 h-3" />
+                        {createdDate}
+                      </div>
+                    </div>
+
+                    <CardTitle className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-yellow-600 transition-colors leading-tight">
+                      {tapri.title}
+                    </CardTitle>
+
+                    <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed line-clamp-3">
+                      {tapri.description}
+                    </p>
+                  </CardHeader>
+
+                  <CardContent className="pt-0">
+                    <div className="space-y-4">
+                      {/* Creator */}
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage
+                            src={tapri.creator?.avatar_url || "/placeholder.svg"}
+                            alt={tapri.creator?.full_name || "Creator"}
+                          />
+                          <AvatarFallback className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 text-xs font-semibold">
+                            {(tapri.creator?.full_name || "U").charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white text-sm">
+                            {tapri.creator?.full_name || "Unknown Creator"}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Project Creator</p>
+                        </div>
+                      </div>
+
+                      {/* Project Details */}
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                          <Clock className="w-3 h-3 text-yellow-600" />
+                          <span>{tapri.timeline || "TBD"}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                          <Users className="w-3 h-3 text-yellow-600" />
+                          <span>{tapri.team_size || "TBD"}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 col-span-2">
+                          <MapPin className="w-3 h-3 text-yellow-600" />
+                          <span>{tapri.location || "Remote"}</span>
+                        </div>
+                      </div>
+
+                      {/* Applications Count */}
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+                        <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
+                          <TrendingUp className="w-4 h-4 text-yellow-600" />
+                          <span>{tapri.applications_count || 0} applications</span>
+                        </div>
+
+                        <Link href={`/tapris/${tapri.id}`}>
+                          <Button
+                            size="sm"
+                            className="bg-gradient-to-r from-black to-gray-800 hover:from-gray-800 hover:to-black text-white font-semibold rounded-xl px-4 py-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                          >
+                            View Details
+                            <ExternalLink className="w-3 h-3 ml-1" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        )}
+
+        {/* CTA Section */}
+        <div className="text-center mt-16 py-12 bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950/20 dark:to-yellow-900/20 rounded-3xl">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Ready to Start Your Own Project?</h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+            Join thousands of entrepreneurs who have launched their startups through Tapri. Create your project and find
+            your perfect co-founders today.
+          </p>
+          <Link href="/create-project">
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black font-bold rounded-xl px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              Create Your Tapri
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   )
