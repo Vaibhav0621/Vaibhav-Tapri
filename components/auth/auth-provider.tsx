@@ -22,10 +22,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Function to check if Supabase is configured (replace with your actual check)
 const isSupabaseConfigured = () => {
-  // Replace this with your actual check for Supabase configuration
-  // For example, check if the Supabase URL and key are set
   return !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 }
 
@@ -36,9 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const fetchProfile = async (userId: string) => {
-    // Check if Supabase is properly configured first
     if (!isSupabaseConfigured()) {
-      // Return mock profile for demo
       return {
         id: userId,
         email: user?.email || "demo@tapri.com",
@@ -54,10 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single()
-
       if (error) {
-        // If the table doesn't exist or other database errors, return mock profile
-        console.warn("Database not fully configured, using demo profile:", error.message)
+        console.warn("Database error, using demo profile:", error.message)
         return {
           id: userId,
           email: user?.email || "demo@tapri.com",
@@ -70,10 +63,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           updated_at: new Date().toISOString(),
         }
       }
-
       return data
     } catch (error) {
-      console.warn("Error fetching profile, using demo profile:", error)
+      console.warn("Profile fetch error:", error)
       return {
         id: userId,
         email: user?.email || "demo@tapri.com",
@@ -97,15 +89,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        return { error }
-      }
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) return { error }
       return { error: null }
     } catch (error) {
       return { error }
@@ -114,26 +99,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            full_name: name,
-          },
+          data: { full_name: name },
         },
       })
-
-      if (error) {
-        return { error }
-      }
-
-      // Don't try to create profile if database isn't set up
-      if (!isSupabaseConfigured()) {
-        console.log("Demo mode: User signup successful")
-      }
-
-      return { error: null }
+      return { error }
     } catch (error) {
       return { error }
     }
@@ -148,54 +121,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = async (updates: any) => {
     if (!user) return
-
-    // If database isn't configured, just update local state
     if (!isSupabaseConfigured()) {
-      console.log("Demo mode: Profile update", updates)
       setProfile((prev) => (prev ? { ...prev, ...updates } : null))
       return
     }
 
     try {
       const { data, error } = await supabase.from("profiles").update(updates).eq("id", user.id).select().single()
-
       if (error) {
-        // If table doesn't exist, just update local state
-        console.warn("Database not configured, updating local profile only")
+        console.warn("Profile update error:", error)
         setProfile((prev) => (prev ? { ...prev, ...updates } : null))
         return
       }
-
       setProfile(data)
     } catch (error) {
       console.warn("Error updating profile:", error)
-      // Fallback to local state update
       setProfile((prev) => (prev ? { ...prev, ...updates } : null))
     }
   }
 
   useEffect(() => {
-    // Get initial session
     const getInitialSession = async () => {
       try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession()
+        // ✅ Simulated login during development
+        if (true) { // TEMP: always simulate login
 
-        if (error) {
-          console.error("Error getting session:", error)
-        } else {
-          setSession(session)
-          setUser(session?.user ?? null)
+          const mockUser = {
+            id: "dev-user-id",
+            email: "dev@tapri.com",
+            user_metadata: { full_name: "Dev Tester" },
+          } as unknown as User
 
-          if (session?.user) {
-            const profileData = await fetchProfile(session.user.id)
-            setProfile(profileData)
-          }
+          setUser(mockUser)
+          setSession(null)
+          const profileData = await fetchProfile(mockUser.id)
+          setProfile(profileData)
+          return
+        }
+
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) console.error("Get session error:", error)
+
+        setSession(session)
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          const profileData = await fetchProfile(session.user.id)
+          setProfile(profileData)
         }
       } catch (error) {
-        console.error("Error in getInitialSession:", error)
+        console.error("Initial session error:", error)
       } finally {
         setLoading(false)
       }
@@ -203,20 +177,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getInitialSession()
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
-
       if (session?.user) {
         const profileData = await fetchProfile(session.user.id)
         setProfile(profileData)
       } else {
         setProfile(null)
       }
-
       setLoading(false)
     })
 
