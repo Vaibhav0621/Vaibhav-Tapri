@@ -66,6 +66,8 @@ export default function HomePage() {
             <SuccessCounter />
           </div>
         </div>
+        
+
 
         {/* Why Choose Tapri */}
         <div className="py-20">
