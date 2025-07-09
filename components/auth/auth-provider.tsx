@@ -145,17 +145,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         // ✅ Simulated login during development
         if (true) { // TEMP: always simulate login
-
           const mockUser = {
             id: "dev-user-id",
             email: "dev@tapri.com",
-            user_metadata: { full_name: "Dev Tester" },
+            user_metadata: {
+              full_name: "Dev Tester",
+              mock_password: "password123"},
           } as unknown as User
 
           setUser(mockUser)
           setSession(null)
           const profileData = await fetchProfile(mockUser.id)
           setProfile(profileData)
+          setLoading(false)
           return
         }
 
