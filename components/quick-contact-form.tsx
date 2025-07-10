@@ -62,7 +62,15 @@ export default function QuickContactForm() {
           <input type="hidden" name="access_key" value="f3993f73-3c04-4f7b-ad60-630c82bb01cc" />
           <input type="hidden" name="subject" value="Quick Contact Form" />
           <input type="hidden" name="from_name" value="Tapri Quick Contact" />
-          <input type="checkbox" name="botcheck" className="hidden" style={{ display: "none" }} />
+          <input
+            type="checkbox"
+            name="botcheck"
+            className="hidden"
+            aria-label="Botcheck"
+            title="Botcheck"
+            tabIndex={-1}
+            autoComplete="off"
+          />
 
           <Input name="name" placeholder="Your Name" required />
           <Input name="email" type="email" placeholder="Your Email" required />

@@ -55,7 +55,18 @@ export default function NewsletterForm() {
       <input type="hidden" name="access_key" value="f3993f73-3c04-4f7b-ad60-630c82bb01cc" />
       <input type="hidden" name="subject" value="Newsletter Subscription" />
       <input type="hidden" name="from_name" value="Tapri Newsletter" />
-      <input type="checkbox" name="botcheck" className="hidden" style={{ display: "none" }} />
+      <label htmlFor="botcheck" className="sr-only">
+        Do not fill this field (anti-bot)
+      </label>
+      <input
+        type="checkbox"
+        id="botcheck"
+        name="botcheck"
+        className="hidden"
+        tabIndex={-1}
+        aria-hidden="true"
+        title="Do not fill this field"
+      />
 
       <Input type="email" name="email" placeholder="Enter your email" required className="flex-1" />
       <Button type="submit" disabled={isSubmitting} className="bg-yellow-500 hover:bg-yellow-600 text-black">

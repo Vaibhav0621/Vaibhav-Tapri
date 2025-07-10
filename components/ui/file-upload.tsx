@@ -77,7 +77,18 @@ export function FileUpload({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <input ref={fileInputRef} type="file" accept={accept} onChange={handleFileSelect} className="hidden" />
+      <label htmlFor="file-upload-input" className="sr-only">
+        Upload {type}
+      </label>
+      <input
+        id="file-upload-input"
+        ref={fileInputRef}
+        type="file"
+        accept={accept}
+        onChange={handleFileSelect}
+        className="hidden"
+        title={`Upload ${type}`}
+      />
 
       {preview ? (
         <div className="relative">
@@ -86,8 +97,7 @@ export function FileUpload({
               <img src={preview || "/placeholder.svg"} alt="Preview" className="w-full h-full object-cover" />
               <button
                 onClick={removeFile}
-                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-              >
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600">
                 <X className="h-4 w-4" />
               </button>
             </div>

@@ -22,7 +22,7 @@ export default function AboutPage() {
         ],
         linkedin: "https://linkedin.com/in/arjunsharma",
         twitter: "https://twitter.com/arjunsharma",
-        location: "San Francisco, CA",
+        location: "Kanpur, CA",
         joinedDate: "2023-01-15",
         },
         {

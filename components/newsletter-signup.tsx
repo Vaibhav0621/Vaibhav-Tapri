@@ -81,7 +81,16 @@ export default function NewsletterSignup() {
         <input type="hidden" name="access_key" value="f3993f73-3c04-4f7b-ad60-630c82bb01cc" />
         <input type="hidden" name="subject" value="New Newsletter Subscription" />
         <input type="hidden" name="from_name" value="Tapri Newsletter" />
-        <input type="checkbox" name="botcheck" className="hidden" style={{ display: "none" }} />
+        <label htmlFor="botcheck" className="sr-only">Do not check this box (anti-bot)</label>
+        <input
+          type="checkbox"
+          id="botcheck"
+          name="botcheck"
+          className="hidden"
+          title="Do not check this box (anti-bot)"
+          tabIndex={-1}
+          aria-hidden="true"
+        />
 
         <div className="flex-1">
           <Input

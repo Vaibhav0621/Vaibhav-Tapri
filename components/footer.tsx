@@ -151,7 +151,18 @@ export default function Footer() {
               <input type="hidden" name="access_key" value="f3993f73-3c04-4f7b-ad60-630c82bb01cc" />
               <input type="hidden" name="subject" value="Footer Newsletter Subscription" />
               <input type="hidden" name="from_name" value="Tapri Footer Newsletter" />
-              <input type="checkbox" name="botcheck" className="hidden" style={{ display: "none" }} />
+              <label htmlFor="botcheck" className="sr-only">
+                Do not check this box (anti-bot)
+              </label>
+              <input
+                type="checkbox"
+                id="botcheck"
+                name="botcheck"
+                className="hidden"
+                title="Do not check this box (anti-bot)"
+                tabIndex={-1}
+                aria-hidden="true"
+              />
 
               <Input
                 type="email"
@@ -176,15 +187,15 @@ export default function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-300">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-yellow-500" />
-              <span>hello@tapri.com</span>
+              <span>startupworld.online@gmail.com</span>
             </div>
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-yellow-500" />
-              <span>+1 (555) 123-4567</span>
+              <span>+91 9119956613</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-yellow-500" />
-              <span>123 Innovation Street, Tech City</span>
+              <span>Kanpur, Uttar Pradesh, India</span>
             </div>
           </div>
         </div>
