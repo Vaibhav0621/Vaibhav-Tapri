@@ -75,7 +75,18 @@ export default function JoinTapriForm({ tapriId, tapriTitle, onClose }: JoinTapr
           <input type="hidden" name="from_name" value="Tapri Join Request" />
           <input type="hidden" name="tapri_id" value={tapriId} />
           <input type="hidden" name="tapri_title" value={tapriTitle} />
-          <input type="checkbox" name="botcheck" className="hidden" style={{ display: "none" }} />
+          <label htmlFor="botcheck" className="sr-only">
+            Botcheck
+          </label>
+          <input
+            type="checkbox"
+            id="botcheck"
+            name="botcheck"
+            className="hidden"
+            title="Botcheck (leave unchecked)"
+            tabIndex={-1}
+            aria-hidden="true"
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
